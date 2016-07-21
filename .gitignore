@@ -1,0 +1,4 @@
+# LISP ignores
+*.FASL
+*.fasl
+*.lisp-temp
