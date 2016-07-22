@@ -1,3 +1,6 @@
+;;; First Lisp file
+;;; Writen by Zachary Ferguson
+
 (print "Hello, World!")
 
 (defun factorial (n)
