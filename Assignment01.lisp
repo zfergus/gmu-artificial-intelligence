@@ -44,8 +44,8 @@
 ; 4. (+ 3 7) results in 10
 
 (if (= 5 4)
-   (print (+ 3 7))
- (print (print "hello")))
+  (print (+ 3 7))
+  (print (print "hello")))
 
 
 ; 3.  Create Lisp expressions which perform the same function as the
@@ -149,7 +149,8 @@
 ; xn-1, xn> is now located at <xn, x0, x1, x2, x2, .. , xn-1>.  Note that this
 ; extra credit is quite nontrivial.
 
-; (defun transpose (mat)
+(defun transpose (mat)
+  (apply #'mapcar #'list mat))
 
 
 
@@ -170,9 +171,12 @@
 ; of the Fibonacci Sequence.  The function should be O(n).  Do NOT make
 ; global variables.
 (defun fib1 (n)
-  (let (x 1)
-    (dotimes (i n x)
-      (setf x (* x (+ 1 i))))))
+  (let ((prev1 0) (prev2 1))
+    (dotimes (i n)
+      (print prev1)
+      (let ((tmp (+ prev1 prev2)))
+        (rotatef prev1 prev2 tmp)))
+    (print prev1)))
 
 
 ; 9. Write a RECURSIVE version (fib2 n) which does not use LET, DOTIMES,
@@ -184,7 +188,7 @@
 (defun fib2 (n)
   (if (<= n 0) 0
     (if (= n 1) 1
-  (+ (fib2 (- n 1)) (fib2 (- n 2)))))
+      (+ (fib2 (- n 1)) (fib2 (- n 2))))))
 
 
 ; 10. A classic: Write a function called SMASH.  This function takes a
