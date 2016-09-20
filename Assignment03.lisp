@@ -1,71 +1,74 @@
-;;;;; ASSIGNMENT 3
+;;;;; CS 480: ASSIGNMENT 3
+;;;;; Written by: Zachary Ferguson (zfergus2)
 
 ;;;;; K-NEAREST-NEIGHBOR
 
-;;;;; This is a very short assignment and its intent is to get your feet wet in Lisp.
-;;;;; Your task is to write three functions which will enable you to test K-Nearest Neighbor:
+;;;;; This is a very short assignment and its intent is to get your feet wet in
+;;;;; Lisp. Your task is to write three functions which will enable you to test
+;;;;; K-Nearest Neighbor:
 ;;;;;
-;;;;; 1. DIFFERENCE.  This function tells you the difference (error) between two lists.
-;;;;;    You will use three kinds of measurement for error: COUNT, SQUARED, and MANHATTAN.
-;;;;;    Though the default will be COUNT, you will probably be most familiar with SQUARED
-;;;;;    since it basically does what the lecture notes showed.
+;;;;; 1. DIFFERENCE.  This function tells you the difference (error) between
+;;;;;    two lists. You will use three kinds of measurement for error: COUNT,
+;;;;;    SQUARED, and MANHATTAN. Though the default will be COUNT, you will
+;;;;;    probably be most familiar with SQUARED since it basically does what
+;;;;;    the lecture notes showed.
 ;;;;;
-;;;;; 2. K-NEAREST-NEIGHBOR.  This function will take a list of examples, and their associated
-;;;;;    classes, and return what class they predict for an additional unseen example, based on
-;;;;;    the classes of the K examples whose DIFFERENCE from the unseen example is lowest.
+;;;;; 2. K-NEAREST-NEIGHBOR.  This function will take a list of examples, and
+;;;;;    their associated classes, and return what class they predict for an
+;;;;;    additional unseen example, based on the classes of the K examples
+;;;;;    whose DIFFERENCE from the unseen example is lowest.
 ;;;;;
-;;;;; 3. GENERALIZATION.  This function will take two lists of examples, a training set and a
-;;;;;    testing set, and return the percentage of testing set examples which were correctly
-;;;;;    predicted by K-Nearest-Neighbor using the original training set examples.
+;;;;; 3. GENERALIZATION.  This function will take two lists of examples, a
+;;;;;    training set and a testing set, and return the percentage of testing
+;;;;;    set examples which were correctly predicted by K-Nearest-Neighbor
+;;;;;    using the original training set examples.
 ;;;;;
 ;;;;; You must do the following:
 ;;;;;
 ;;;;; 1. Write the three functions correctly.
 ;;;;; 2. Test them on the two EXAMPLES below.  Determine the correct values.
-;;;;; 3. Modify this file into properly-commented and properly compiling lisp code,
-;;;;;    which has at the end of it, in comments, the answers to the two EXAMPLES questions,
-;;;;;    PLUS an at least 500-word report detailing how you went about implementing this code
-;;;;;    and what you learned along the way.
+;;;;; 3. Modify this file into properly-commented and properly compiling lisp
+;;;;;    code, which has at the end of it, in comments, the answers to the two
+;;;;;    EXAMPLES questions, PLUS an at least 500-word report detailing how you
+;;;;;    went about implementing this code and what you learned along the way.
 ;;;;;
-;;;;; You should submit this file as a single LISP file named FooBar.lisp, where Foo is your
-;;;;; first name and Bar is your last name (for example, my file would be named SeanLuke.lisp).
+;;;;; You should submit this file as a single LISP file named FooBar.lisp,
+;;;;; where Foo is your first name and Bar is your last name (for example, my
+;;;;; file would be named SeanLuke.lisp).
 ;;;;;
-;;;;; This file will be mailed as an ATTACHMENT to the TA.  The lisp code must NOT be cut-and-pasted
-;;;;; into the email message or your submission will not count.
+;;;;; This file will be mailed as an ATTACHMENT to the TA.  The lisp code must
+;;;;; NOT be cut-and-pasted into the email message or your submission will not
+;;;;; count.
 
 
 
 (defun difference (list1 list2 &key (measure 'count))
-  "Returns the DIFFERENCE (or ERROR) between two lists of things, using one of three measures:
+  "Returns the DIFFERENCE (or ERROR) between two lists of things, using one of
+    three measures:
 
 1. Measure type COUNT:  the number of times an item in list1 is different from
    an item in list2 at the same position.  The items don't have to be numbers.
-   Example usage:   (difference '(red blue bob) '(blue blue george) :measure 'count)  ->  2
+   Example usage:   (difference '(red blue bob) '(blue blue george) :
+     'count)  ->  2
 
-2. Measure type SQUARED: the sum squared difference between items in list1 and list2
-   Obviously, the items must be numbers of some sort.
+2. Measure type SQUARED: the sum squared difference between items in list1 and
+   list2. Obviously, the items must be numbers of some sort.
    Example usage:   (difference '(1 2 3) '(1 3 7) :measure 'squared)  -> 17
 
-2. Measure type MANHATTAN: the sum absolute difference (abs (- a b)) between items
-   in list1 and list2.  Obviously the items must be numbers of some sort.
+2. Measure type MANHATTAN: the sum absolute difference (abs (- a b)) between
+   items in list1 and list2.  Obviously the items must be numbers of some sort.
    Example usage:   (difference '(1 2 3) '(1 3 7) :measure 'manhattan)  -> 5"
 
-;;; HINTS: use equalp to test for the given type, and for equality in COUNT
-;;; HINTS: ABS is absolute value
-;;; HINTS: I used MAPCAR and LAMBDA to make things easy. You might look them up.
-;;; HINTS: This is a place where INCF would be reasonable.
-;;; HINTS: My code is about 14 (short) lines long
-
-  (apply #'+
+  (apply #'+ ; Sum up the differences
     (if (equalp measure 'count)
-      (mapcar (lambda (x1 x2) (if (equalp x1 x2) 0 1))
-        list1 list2)
+      (mapcar (lambda (x1 x2) (if (equalp x1 x2) 0 1)) ; Check for differences
+        list1 list2) ; Map from the lists to a list of booleans.
     (if (equalp measure 'squared)
-      (mapcar (lambda (x1 x2) (* (- x2 x1) (- x2 x1)))
-        list1 list2)
+      (mapcar (lambda (x1 x2) (* (- x2 x1) (- x2 x1))) ; Squared difference
+        list1 list2) ; Map from the lists to a list of squared differences.
     (if (equalp measure 'manhattan)
-      (mapcar (lambda (x1 x2) (abs (- x1 x2)))
-        list1 list2)
+      (mapcar (lambda (x1 x2) (abs (- x1 x2))) ; Abs of difference
+        list1 list2) ; Map from the lists to a list of absolute differences.
     ; Else the measure is invalid so return -1.
     '(-1))))))
 
@@ -75,25 +78,23 @@
 (defun most-common (list)
   "Returns the most common item in list, breaking ties arbitrarily"
   (let ((reduced-elts (mapcar (lambda (elt) (list elt (count elt list)))
-			      (remove-duplicates list)))) ; NB: remove-duplicates does such based on address not values
+            ; NB: remove-duplicates does such based on address not values
+            (remove-duplicates list))))
     (first (first (sort reduced-elts #'> :key #'second)))))
 
 
 (defun k-nearest-neighbor (examples new-example &key (k 1) (measure 'count))
-  "Given a LIST of EXAMPLES, each of the form (list-of-data class), and a NEW-EXAMPLE
-of the same form, determines the K EXAMPLES which most closely resemble the NEW-EXAMPLE,
-then returns the most common class among them.  The MEASURE used to compute similarity
-can be provided.  Note that the CLASS is a LIST, like (0.9), not 0.9."
+  "Given a LIST of EXAMPLES, each of the form (list-of-data class), and a
+NEW-EXAMPLE of the same form, determines the K EXAMPLES which most closely
+resemble the NEW-EXAMPLE, then returns the most common class among them. The
+MEASURE used to compute similarity can be provided. Note that the CLASS is a
+LIST, like (0.9), not 0.9."
 
-;;; HINTS: use MOST-COMMON to select the most common among N classes.
-;;; HINTS: you might use SORT and SUBSEQ
-;;; HINTS: I used MAPCAR and LAMBDA to make things easy. You might look them up.
-;;; HINTS: My code is about 11 lines long
-
-  (list (most-common
+  (list (most-common ; Determine the most common class
     (mapcar (lambda (example) (caadr example)) ; Put all k classes in a list
-      (subseq
+      (subseq ; Take the closest K examples
         (sort (copy-list examples) (lambda (ith-example jth-example)
+          ; Sort the examples based on the difference from the new-example
           (< (difference
               (first ith-example) (first new-example) :measure measure)
             (difference
@@ -104,14 +105,9 @@ can be provided.  Note that the CLASS is a LIST, like (0.9), not 0.9."
 
 (defun generalization (training-examples test-examples &key (k 1) (measure 'count))
   "Given a list of TRAINING EXAMPLES, each of the form (list-of-data class),
-and a set of TEST EXAMPLES, each of the same form, returns the percentage of TEST
-EXAMPLES correctly classified when passed to K-NEAREST-NEIGHBOR with the TRAINING
-EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
-
-;;; HINTS: use EQUALP to compare classes
-;;; HINTS: This is a place where INCF would be reasonable.
-;;; HINTS: I used DOLIST
-;;; HINTS: My code is about 5 lines long
+and a set of TEST EXAMPLES, each of the same form, returns the percentage of
+TEST EXAMPLES correctly classified when passed to K-NEAREST-NEIGHBOR with the
+TRAINING EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
 
   (coerce (/
     (apply #'+ ; Sum up all booleans for if correct matching.
@@ -120,7 +116,7 @@ EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
             training-examples test-example :k k :measure measure))
           1 0)) ; 1 if correct class 0 otherwise
         test-examples))
-      (length test-examples))
+    (length test-examples)) ; Divide by the number of test-examples
     'double-float)) ; Convert from a rational number to a real number.
 
 
@@ -128,13 +124,13 @@ EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
 
 ;;;;; SOME EXAMPLES
 ;;;;;
-;;;;; Find out what *VOTING-RECORDS-SHORT* would predict about the *NEUTRAL* congressman using 3-Nearest Neighbor
-;;;;; and sum-squared error distance.
+;;;;; Find out what *VOTING-RECORDS-SHORT* would predict about the *NEUTRAL*
+;;;;; congressman using 3-Nearest Neighbor and sum-squared error distance.
 ;;;;;
 ;;;;; (k-nearest-neighbor *voting-records-short* *neutral* :k 3 :measure 'squared)
 ;;;;;
-;;;;; Find out how well the first 200 voting records predict the last 94 voting records using 3-Nearest Neighbor
-;;;;; and sum-squared error distance.
+;;;;; Find out how well the first 200 voting records predict the last 94 voting
+;;;;; records using 3-Nearest Neighbor and sum-squared error distance.
 ;;;;;
 ;;;;; (generalization (butlast *voting-records-short* 94) (last *voting-records-short* 94) :measure 'squared :k 3)
 ;;;;;
