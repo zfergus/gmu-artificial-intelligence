@@ -86,7 +86,7 @@ MEASURE used to compute similarity can be provided. Note that the CLASS is a
 LIST, like (0.9), not 0.9."
 
   (list (most-common ; Determine the most common class
-    (mapcar (lambda (example) (first (first (rest example))))
+    (mapcar (lambda (example) (first (second example)))
       (subseq ; Take the closest K examples
         (sort (copy-list examples) (lambda (ith-example jth-example)
           ; Sort the examples based on the difference from the new-example
@@ -106,12 +106,12 @@ TRAINING EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
   (coerce (/
     (apply #'+ ; Sum up all booleans for if correct matching.
       (mapcar (lambda (test-example) ; Map all test examples to 1 or 0
-        (if (equalp (first (rest test-example)) (k-nearest-neighbor
+        (if (equalp (second test-example) (k-nearest-neighbor
             training-examples test-example :k k :measure measure))
           1 0)) ; 1 if correct class 0 otherwise
         test-examples))
     (length test-examples)) ; Divide by the number of test-examples
-    'double-float)) ; Convert from a rational number to a real number.
+    'float)) ; Convert from a rational number to a real number.
 
 
 
@@ -433,6 +433,7 @@ TRAINING EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
   ((0.9 0.1 0.9 0.1 0.1 0.1 0.9 0.9 0.9 0.9 0.1 0.1 0.1 0.1 0.9 0.9) (0.9))
   ((0.1 0.1 0.9 0.1 0.1 0.1 0.9 0.9 0.9 0.9 0.1 0.1 0.1 0.1 0.1 0.9) (0.9))))
 
+;;;;;
 ;;;;; SOLUTIONS TO EXAMPLES:
 ;;;;;
 ;;;;; 1) Find out what *VOTING-RECORDS-SHORT* would predict about the *NEUTRAL*
@@ -443,45 +444,55 @@ TRAINING EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
 ;;;;; 2) Find out how well the first 200 voting records predict the last 94
 ;;;;;    voting records using 3-Nearest Neighbor and sum-squared error distance.
 ;;;;; Results:
-;;;;; 0.925531914893617
+;;;;; 0.9255319
 ;;;;;
 ;;;;; REPORT:
 ;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
-;;;;;
+;;;;; While implementing this code I tried to utilize mapcar, lambda, and apply
+;;;;; to write short, concise, and readable code. The difference function can
+;;;;; calculate the difference in three different ways. Realizing  this, I was
+;;;;; able to implement the function by using a mapping with a lambda decided
+;;;;; by the measure type. Each lambda calculates the difference in there own
+;;;;; way and then the list of differences is passed to the addition function
+;;;;; to be summed up. These design choices allow for simple and ease to read
+;;;;; code.
+;;;;; Moving onto the k-nearest-neighbor function, my design choices follow the
+;;;;; difference function. I attempted to use lambda to simplify the code. To
+;;;;; implement k-nearest-neighbor, I first sort the examples based on their
+;;;;; difference to the new-example. Then, I take a subsequence of the closest
+;;;;; k examples and determine the most common label of these examples. The
+;;;;; provided most-common function does have a bug in which remove-duplicated
+;;;;; will not remove classes if they are list, so I first take the classes out
+;;;;; of their lists then call most-common.
+;;;;; To implement the generalization function, I simply map from the
+;;;;; test-examples to a list of boolean values for if the class is correct. I
+;;;;; then sum up these boolean values are divide by the number of test
+;;;;; examples.
+;;;;; Working on this project I was able to get a firm grasp of LISP and better
+;;;;; understand the apply and mapcar functions. Both of the functions combined
+;;;;; with lambdas allow for short yet powerful code.
+;;;;; This project provided insight into the induction and k-nearest neighbor.
+;;;;; The lecture notes provide a simple two dimensional example, but working
+;;;;; with the data set provided it becomes clear that the algorithm can
+;;;;; function in higher dimensions. Computing the difference of two vectors
+;;;;; in this higher dimension follows the simple example, and it is easy to
+;;;;; see that k-nearest neighbor is a effective algorithm in classifying data.
+;;;;; The choice of measure and the value for K, the number of nearest neighbor
+;;;;; to consider, plays an important role in determining the classification.
+;;;;; With a K value too low the algorithm overfits the data, not accounting
+;;;;; for noise. Similarly, a K value too large will result in underfitting and
+;;;;; poor borders between classifiers. While testing the different data sets I
+;;;;;  experimented with the K-value to determine a  good fit for the data.
+;;;;; I also experimented with the measures for the difference function to
+;;;;; determine its effect. Using the generalization function I was able to
+;;;;; determine the difference in percent based solely on the measurement.
+;;;;; Experimentally, the squared and manhattan measurements performed better
+;;;;; than the count measurement. This seems logical because both the squared
+;;;;; and manhattan distance account for real distance and not for simple
+;;;;; boolean difference. Count, however, is able to handle input vector
+;;;;; beyond number. For these values, count is obviously a better choice
+;;;;; since the squared or manhattan difference of a string is undefined.
+;;;;; In conclusion, k-nearest neighbor is a simple yet powerful algorithm for
+;;;;; classifying input based on a training set. The measure and value of K,
+;;;;; however, require some testing to determine a value that is a good fit.
 ;;;;;
