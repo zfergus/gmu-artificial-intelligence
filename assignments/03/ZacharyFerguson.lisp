@@ -72,7 +72,7 @@
 ;;; I am providing this function for you as an example
 (defun most-common (list)
   "Returns the most common item in list, breaking ties arbitrarily"
-  (let ((reduced-elts (mapcar (lambda (elt) (list elt (count elt list)))
+  (let ((reduced-elts (mapcar #'(lambda (elt) (list elt (count elt list)))
             ; NB: remove-duplicates does such based on address not values
             (remove-duplicates list))))
     (first (first (sort reduced-elts #'> :key #'second)))))
@@ -86,9 +86,9 @@ MEASURE used to compute similarity can be provided. Note that the CLASS is a
 LIST, like (0.9), not 0.9."
 
   (list (most-common ; Determine the most common class
-    (mapcar (lambda (example) (first (second example)))
+    (mapcar #'(lambda (example) (first (second example)))
       (subseq ; Take the closest K examples
-        (sort (copy-list examples) (lambda (ith-example jth-example)
+        (sort (copy-list examples) #'(lambda (ith-example jth-example)
           ; Sort the examples based on the difference from the new-example
           (< (difference
               (first ith-example) (first new-example) :measure measure)
@@ -105,7 +105,7 @@ TRAINING EXAMPLES.  Note that the CLASS is a LIST, like (0.9), not 0.9."
 
   (coerce (/
     (apply #'+ ; Sum up all booleans for if correct matching.
-      (mapcar (lambda (test-example) ; Map all test examples to 1 or 0
+      (mapcar #'(lambda (test-example) ; Map all test examples to 1 or 0
         (if (equalp (second test-example) (k-nearest-neighbor
             training-examples test-example :k k :measure measure))
           1 0)) ; 1 if correct class 0 otherwise
