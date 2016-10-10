@@ -98,7 +98,8 @@
 ; D1) Add the Gini index in addition to Information as an additional option
 ; for impurity.
 ;
-; D2) Extend the decision tree to handle floating-point attributes as well as categorical ones
+; D2) Extend the decision tree to handle floating-point attributes as well as
+;     categorical ones
 ;
 ; D3) Add K-Fold Validation and demonstrate it
 ;
@@ -440,10 +441,10 @@
       ; if all examples have the same label return that label
       (if (examples-have-same-label-p examples)
         (list :label (label-of-example (first examples)))
-      ; if all examples have the same feature values return most common label
+        ; if all examples have the same feature values return most common label
         (if (or (null feature-defs) (examples-have-same-feature-vals examples))
           (list :label (most-common-label examples))
-        ; otherwise build a nonleaf-node for the choosen feature
+          ; otherwise build a nonleaf-node for the choosen feature
           (let ((feature-def (choose-feature feature-defs examples labels)))
             (append (list (first feature-def)) (mapcar #'(lambda (val)
               (list val (build-decision-tree
@@ -552,7 +553,7 @@
 ; Output:
 ;   (T NIL T NIL NIL T NIL T T   T   NIL T)
 ;
-; Results: The examples differ in 3 places.
+; Results: The labels differ in 3 places.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
