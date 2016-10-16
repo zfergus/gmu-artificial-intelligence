@@ -202,8 +202,8 @@ pretty efficient.  Returns the shuffled version of the list."
   (let ((vec (apply #'vector lis)) bag (len (length lis)))
     (dotimes (x len)
       (let ((i (random (- len x))))
-	(rotatef (svref vec i) (svref vec (- len x 1)))
-	(push (svref vec (- len x 1)) bag)))
+  (rotatef (svref vec i) (svref vec (- len x 1)))
+  (push (svref vec (- len x 1)) bag)))
     bag))   ;; 65 s-expressions, by the way
 
 
@@ -218,20 +218,20 @@ pretty efficient.  Returns the shuffled version of the list."
   ;; we presume they're rectangular -- else we're REALLY in trouble!
   (when *verify*
     (unless (and
-	     (apply #'= (mapcar #'length matrices))
-	     (apply #'= (mapcar #'length (mapcar #'first matrices))))
+       (apply #'= (mapcar #'length matrices))
+       (apply #'= (mapcar #'length (mapcar #'first matrices))))
       (throw-error (format t "In ~s, matrix dimensions not equal: ~s"
-			   funcname
-			   (mapcar #'(lambda (mat) (list (length mat) 'by (length (first mat))))
-				   matrices))))))
+         funcname
+         (mapcar #'(lambda (mat) (list (length mat) 'by (length (first mat))))
+           matrices))))))
 
 (defun verify-multiplicable (matrix1 matrix2)
   ;; we presume they're rectangular -- else we're REALLY in trouble!
   (when *verify*
     (if (/= (length (first matrix1)) (length matrix2))
-	(throw-error (format t "In multiply, matrix dimensions not valid: ~s"
-			     (list (list (length matrix1) 'by (length (first matrix1)))
-				   (list (length matrix2) 'by (length (first matrix2)))))))))
+  (throw-error (format t "In multiply, matrix dimensions not valid: ~s"
+           (list (list (length matrix1) 'by (length (first matrix1)))
+           (list (length matrix2) 'by (length (first matrix2)))))))))
 
 
 ;; Basic Operations
@@ -240,10 +240,10 @@ pretty efficient.  Returns the shuffled version of the list."
   "Maps function over elements in matrices, returning a new matrix"
   (apply #'verify-equal 'map-m  matrices)
   (apply #'mapcar #'(lambda (&rest vectors)       ;; for each matrix...
-		      (apply #'mapcar #'(lambda (&rest elts)     ;; for each vector...
-					  (apply function elts))
-			     vectors))
-	 matrices))   ;; pretty :-)
+          (apply #'mapcar #'(lambda (&rest elts)     ;; for each vector...
+            (apply function elts))
+           vectors))
+   matrices))   ;; pretty :-)
 
 (defun transpose (matrix)
   "Transposes a matrix"
@@ -259,8 +259,8 @@ pretty efficient.  Returns the shuffled version of the list."
     with each element initialized to a random
     floating-point number between -val and val"
   (make-matrix i j #'(lambda (x)
-		       (declare (ignore x))  ;; quiets warnings about x not being used
-		       (- (random (* 2.0 val)) val))))
+           (declare (ignore x))  ;; quiets warnings about x not being used
+           (- (random (* 2.0 val)) val))))
 
 (defun e (matrix i j)
   "Returns the element at row i and column j in matrix"
@@ -281,9 +281,9 @@ pretty efficient.  Returns the shuffled version of the list."
   (verify-multiplicable matrix1 matrix2)
   (let ((tmatrix2 (transpose matrix2)))
     (mapcar #'(lambda (vector1)
-		(mapcar #'(lambda (vector2)
-			    (apply #'+ (mapcar #'* vector1 vector2))) tmatrix2))
-	    matrix1)))  ;; pretty :-)
+    (mapcar #'(lambda (vector2)
+          (apply #'+ (mapcar #'* vector1 vector2))) tmatrix2))
+      matrix1)))  ;; pretty :-)
 
 (defun multiply (matrix1 matrix2 &rest matrices)
   "Multiplies matrices together"
@@ -344,7 +344,7 @@ pretty efficient.  Returns the shuffled version of the list."
   "Returns (as a scalar value) the error between the output and correct vectors"
   ; error =  0.5 ( tr[c - o] . (c - o) )
   (e
-    (let ((c-o (subtract output correct-output)))
+    (let ((c-o (subtract correct-output output)))
       (* 0.5 (multiply (transpose c-o) c-o)))
     1 1))
 
@@ -360,9 +360,8 @@ pretty efficient.  Returns the shuffled version of the list."
 (defun forward-propagate (datum v w)
   "Returns as a vector the output of the OUTPUT units when presented
 the datum as input."
-  (map-m #'sigmoid (multiply w ; o = sigmoid[w . h]
-    (map-m #'sigmoid (multiply v ; h = sigmoid[v . i]
-      (first datum))))))
+  (let ((hidden (map-m #'sigmoid (multiply v (first datum))))) ; h=sigmoid[v.i]
+    (list hidden (map-m #'sigmoid (multiply w hidden))))) ; o = sigmoid[w .h]
 
 
 ;; IMPLEMENT THIS FUNCTION
@@ -374,14 +373,21 @@ returning a list consisting of new, modified V and W matrices."
   ;; let* is like let, except that it lets you initialize local
   ;; variables in the context of earlier local variables in the
   ;; same let* statement.
-  ; odelta = (c - o) o (1 - o)
-  ; hdelta = (h (1 - h) (tr[w] . odelta))
-  ; w = w + alpha (odelta . tr[h])
-  ; v = v + alpha (hdelta . tr[i])
-  (let* ((output (forward-propagate datum v w))
+  (let* ((hidden-output (forward-propagate datum v w))
+    (hidden (first hidden-output)); h = hidden unit
+    (output (second hidden-output)) ; o = output
+    ; odelta = (c - o) o (1 - o)
     (odelta (e-multiply (subtract (second datum) output) output ; (c-o) o (...)
       (scalar-add 1 (scalar-multiply -1 output)))) ; (1 - o)
-    (hdelta (e-multiply )))))
+    ; hdelta = (h (1 - h) (tr[w] . odelta))
+    (hdelta (e-multiply hidden (scalar-add 1 (scalar-multiply -1 hidden))
+      (multiply (transpose w) odelta)))
+    (list
+      ; w = w + alpha (odelta . tr[h])
+      (add w (scalar-multiply alpha (multiply odelta (transpose hidden))))
+      ; v = v + alpha (hdelta . tr[i])
+      (add v (scalar-multiply alpha (multiply hdelta
+        (transpose (first datum)))))))))
 
 
 
@@ -482,24 +488,24 @@ and use a modulo of MAX-ITERATIONS."
 (defun scale-list (lis)
   "Scales a list so the minimum value is 0.1 and the maximum value is 0.9.  Don't use this function, it's just used by scale-data."
   (let ((min (reduce #'min lis))
-	(max (reduce #'max lis)))
+  (max (reduce #'max lis)))
     (mapcar (lambda (elt) (+ 0.1 (* 0.8 (/ (- elt min) (- max min)))))
-	    lis)))
+      lis)))
 
 (defun scale-data (lis)
   "Scales all the attributes in a list of samples of the form ((attributes) (outputs))"
   (transpose (list (transpose (mapcar #'scale-list (transpose (mapcar #'first lis))))
-		   (transpose (mapcar #'scale-list (transpose (mapcar #'second lis)))))))
+       (transpose (mapcar #'scale-list (transpose (mapcar #'second lis)))))))
 
 (defun convert-data (raw-data)
   "Converts raw data into column-vector data of the form that
 can be fed into NET-LEARN.  Also adds a bias unit of 0.5 to the input."
   (mapcar #'(lambda (datum)
-	      (mapcar #'(lambda (vec)
-			  (mapcar #'list vec))
-		      (list (cons 0.5 (first datum))
-			    (second datum))))
-	  raw-data))
+        (mapcar #'(lambda (vec)
+        (mapcar #'list vec))
+          (list (cons 0.5 (first datum))
+          (second datum))))
+    raw-data))
 
 (defun average (lis)
   "Computes the average over a list of numbers.  Returns 0 if the list length is 0."
@@ -535,22 +541,22 @@ can be fed into NET-LEARN.  Also adds a bias unit of 0.5 to the input."
 ;; The output is democrat or republican
 
 ;; the input is the following votes:
-					;   1. handicapped-infants: 2 (y,n)
-					;   2. water-project-cost-sharing: 2 (y,n)
-					;   3. adoption-of-the-budget-resolution: 2 (y,n)
-					;   4. physician-fee-freeze: 2 (y,n)
-					;   5. el-salvador-aid: 2 (y,n)
-					;   6. religious-groups-in-schools: 2 (y,n)
-					;   7. anti-satellite-test-ban: 2 (y,n)
-					;   8. aid-to-nicaraguan-contras: 2 (y,n)
-					;   9. mx-missile: 2 (y,n)
-					;  10. immigration: 2 (y,n)
-					;  11. synfuels-corporation-cutback: 2 (y,n)
-					;  12. education-spending: 2 (y,n)
-					;  13. superfund-right-to-sue: 2 (y,n)
-					;  14. crime: 2 (y,n)
-					;  15. duty-free-exports: 2 (y,n)
-					;  16. export-administration-act-south-africa: 2 (y,n)
+          ;   1. handicapped-infants: 2 (y,n)
+          ;   2. water-project-cost-sharing: 2 (y,n)
+          ;   3. adoption-of-the-budget-resolution: 2 (y,n)
+          ;   4. physician-fee-freeze: 2 (y,n)
+          ;   5. el-salvador-aid: 2 (y,n)
+          ;   6. religious-groups-in-schools: 2 (y,n)
+          ;   7. anti-satellite-test-ban: 2 (y,n)
+          ;   8. aid-to-nicaraguan-contras: 2 (y,n)
+          ;   9. mx-missile: 2 (y,n)
+          ;  10. immigration: 2 (y,n)
+          ;  11. synfuels-corporation-cutback: 2 (y,n)
+          ;  12. education-spending: 2 (y,n)
+          ;  13. superfund-right-to-sue: 2 (y,n)
+          ;  14. crime: 2 (y,n)
+          ;  15. duty-free-exports: 2 (y,n)
+          ;  16. export-administration-act-south-africa: 2 (y,n)
 
 
 (defparameter *voting-records*
