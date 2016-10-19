@@ -332,8 +332,8 @@ pretty efficient.  Returns the shuffled version of the list."
 ;; IMPLEMENT THIS FUNCTION
 
 (defun sigmoid (u)
-  "Sigmoid function applied to the number u"
-  (/ 1 (+ 1 (exp (- u)))))
+  "Sigmoid function applied to the number u (Asumme beta = 1)."
+  (/ 1 (+ 1 (exp (- u))))) ; 1/(1+e^(-u))
 
 ;; output and correct-output are both column-vectors
 
@@ -343,9 +343,8 @@ pretty efficient.  Returns the shuffled version of the list."
 (defun net-error (output correct-output)
   "Returns (as a scalar value) the error between the output and correct vectors"
   ; error =  0.5 ( tr[c - o] . (c - o) )
-  (e
-    (let ((c-o (subtract correct-output output)))
-      (* 0.5 (multiply (transpose c-o) c-o)))
+  (e (let ((c-o (subtract correct-output output)))
+      (scalar-multiply 0.5 (multiply (transpose c-o) c-o)))
     1 1))
 
 
@@ -355,13 +354,18 @@ pretty efficient.  Returns the shuffled version of the list."
 ;; Notice that this is different from the raw data provided in the problems below.
 ;; You can convert the raw data to this column-vector form using CONVERT-DATA
 
+(defun forward-propagate-helper (datum v w)
+  "Helper function for forward-propagate. Returns a list containing as a vector
+the output of the HIDDEN and OUTPUT units when presented the datum as input."
+  (let ((hidden (map-m #'sigmoid (multiply v (first datum))))) ; h=sigmoid[v.i]
+    (list hidden (map-m #'sigmoid (multiply w hidden))))) ; o = sigmoid[w .h]
+
 ;; IMPLEMENT THIS FUNCTION
 
 (defun forward-propagate (datum v w)
   "Returns as a vector the output of the OUTPUT units when presented
 the datum as input."
-  (let ((hidden (map-m #'sigmoid (multiply v (first datum))))) ; h=sigmoid[v.i]
-    (list hidden (map-m #'sigmoid (multiply w hidden))))) ; o = sigmoid[w .h]
+  (second (forward-propagate-helper datum v w))) ; (second (list h o)) = o
 
 
 ;; IMPLEMENT THIS FUNCTION
@@ -373,21 +377,21 @@ returning a list consisting of new, modified V and W matrices."
   ;; let* is like let, except that it lets you initialize local
   ;; variables in the context of earlier local variables in the
   ;; same let* statement.
-  (let* ((hidden-output (forward-propagate datum v w))
+  (let* ((hidden-output (forward-propagate-helper datum v w)) ; (hidden output)
     (hidden (first hidden-output)); h = hidden unit
     (output (second hidden-output)) ; o = output
     ; odelta = (c - o) o (1 - o)
     (odelta (e-multiply (subtract (second datum) output) output ; (c-o) o (...)
-      (scalar-add 1 (scalar-multiply -1 output)))) ; (1 - o)
+      (subtract-from-scalar 1 output))) ; (1 - o)
     ; hdelta = (h (1 - h) (tr[w] . odelta))
-    (hdelta (e-multiply hidden (scalar-add 1 (scalar-multiply -1 hidden))
-      (multiply (transpose w) odelta)))
+    (hdelta (e-multiply hidden (subtract-from-scalar 1 hidden)
+      (multiply (transpose w) odelta))))
     (list
-      ; w = w + alpha (odelta . tr[h])
-      (add w (scalar-multiply alpha (multiply odelta (transpose hidden))))
       ; v = v + alpha (hdelta . tr[i])
       (add v (scalar-multiply alpha (multiply hdelta
-        (transpose (first datum)))))))))
+        (transpose (first datum)))))
+      ; w = w + alpha (odelta . tr[h])
+      (add w (scalar-multiply alpha (multiply odelta (transpose hidden)))))))
 
 
 
@@ -414,6 +418,14 @@ In any case, returns x"
 ;; Notice that this is different from the raw data provided in the problems below.
 ;; You can convert the raw data to this column-vector form using CONVERT-DATA
 
+;;;; Some useful preprocessing functions
+
+(defun average (lis)
+  "Computes the average over a list of numbers.  Returns 0 if the list length is 0."
+  (if (= (length lis) 0)
+      0
+      (/ (reduce #'+ lis) (length lis))))
+
 
 ;;; IMPLEMENT THIS FUNCTION
 
@@ -437,56 +449,33 @@ is met (see below):
 
 The function should return a list of two items: the final V matrix
 and the final W matrix of the learned network."
-  )
-
-
-
-;; For this function, you should pass in the data just like it's defined
-;; in the example problems below (that is, not in the "column vector" format
-;; used by NET-BUILD.  Of course, if you need to call NET_BUILD from this function
-;; you can alway convert this data to column-vector format using CONVERT-DATA within
-;; the SIMPLE-GENERALIZATION function.
-;;
-;; Yes, this is ridiculously inconsistent.  Deal with it.  :-)
-
-;;; IMPLEMENT THIS FUNCTION
-
-(defun simple-generalization (data num-hidden-units alpha initial-bounds max-iterations)
-  "Given a set of data, trains a neural network on the first half
-of the data, then tests generalization on the second half, returning
-the average error among the samples in the second half.  Don't print any errors,
-and use a modulo of MAX-ITERATIONS."
-  )
-
-
-
-;; For this function, you should pass in the data just like it's defined
-;; in the example problems below (that is, not in the "column vector" format
-;; used by NET-BUILD.  Of course, if you need to call NET_BUILD from this function
-;; you can alway convert this data to column-vector format using CONVERT-DATA within
-;; the SIMPLE-GENERALIZATION function.
-;;
-;; Yes, this is ridiculously inconsistent.  Deal with it.  :-)
-
-
-;;; IMPLEMENT THIS FUNCTION FOR CS 580
-
-(defun k-fold-validation (data k num-hidden-units alpha initial-bounds max-iterations)
-  "Given a set of data, performs k-fold validation on this data for
-the provided value of k, by training the network on (k-1)/k of the data,
-then testing generalization on the remaining 1/k of the data.  This is
-done k times for different 1/k chunks (and building k different networks).
-The average error among all tested samples is returned.  Don't print any errors,
-and use a modulo of MAX-ITERATIONS."
-  )
-
-
-
+  (let ((v (make-random-matrix num-hidden-units (length (first (first data)))
+      initial-bounds))
+    (w (make-random-matrix (length (second (first data))) num-hidden-units
+      initial-bounds)))
+    (dotimes (i max-iterations (list v w))
+      (dolist (datum (shuffle data)) ; Perform backpropagation on all data
+        (let ((v-w (back-propagate datum alpha v w)))
+          (setf v (first v-w)) ; Update the V and W matrices
+          (setf w (second v-w))))
+      (if (and (not (equalp i 0)) (equalp (mod i modulo) 0)) ; if modulo:
+        (let ((errors (mapcar #'(lambda (datum) ; list of all errors
+            (optionally-print (net-error ; optionally-print the error of data
+              (forward-propagate datum v w) (second datum)) print-all-errors))
+            data)))
+          ; Compute the average and worst error for the data.
+          (format t "~%Average Error: ~a~%" (average errors))
+          (let ((worst-error (apply #'max errors)))
+            (format t "Worst Error: ~a~%" worst-error)
+            (if (< worst-error *a-good-minimum-error*)
+              ; Worst error is lower than min-error, so return from net-build
+              (return-from net-build (list v w))))))))) ; return (list v w)
 
 ;;;; Some useful preprocessing functions
 
 (defun scale-list (lis)
-  "Scales a list so the minimum value is 0.1 and the maximum value is 0.9.  Don't use this function, it's just used by scale-data."
+  "Scales a list so the minimum value is 0.1 and the maximum value is 0.9.
+  Don't use this function, it's just used by scale-data."
   (let ((min (reduce #'min lis))
   (max (reduce #'max lis)))
     (mapcar (lambda (elt) (+ 0.1 (* 0.8 (/ (- elt min) (- max min)))))
@@ -507,11 +496,55 @@ can be fed into NET-LEARN.  Also adds a bias unit of 0.5 to the input."
           (second datum))))
     raw-data))
 
-(defun average (lis)
-  "Computes the average over a list of numbers.  Returns 0 if the list length is 0."
-  (if (= (length lis) 0)
-      0
-      (/ (reduce #'+ lis) (length lis))))
+
+;; For this function, you should pass in the data just like it's defined
+;; in the example problems below (that is, not in the "column vector" format
+;; used by NET-BUILD.  Of course, if you need to call NET_BUILD from this function
+;; you can alway convert this data to column-vector format using CONVERT-DATA within
+;; the SIMPLE-GENERALIZATION function.
+;;
+;; Yes, this is ridiculously inconsistent.  Deal with it.  :-)
+
+;;; IMPLEMENT THIS FUNCTION
+
+(defun simple-generalization (data num-hidden-units alpha initial-bounds max-iterations)
+  "Given a set of data, trains a neural network on the first half
+of the data, then tests generalization on the second half, returning
+the average error among the samples in the second half.  Don't print any errors,
+and use a modulo of MAX-ITERATIONS."
+  ; Build the neural network, V and W matrices
+  (let* ((data-first-half (convert-data (butlast data
+      (ceiling (/ (length data) 2)))))
+    (data-second-half (convert-data (last data (floor (/ (length data) 2)))))
+    (v-w (net-build data-first-half num-hidden-units alpha initial-bounds
+      max-iterations max-iterations nil)))
+    ; Return the average of all the errors of the second half of the data.
+    (average (mapcar #'(lambda (datum)
+      (let ((output (forward-propagate datum (first v-w) (second v-w))))
+        (net-error output (second datum)))) data-second-half))))
+
+
+
+;; For this function, you should pass in the data just like it's defined
+;; in the example problems below (that is, not in the "column vector" format
+;; used by NET-BUILD.  Of course, if you need to call NET_BUILD from this function
+;; you can alway convert this data to column-vector format using CONVERT-DATA within
+;; the SIMPLE-GENERALIZATION function.
+;;
+;; Yes, this is ridiculously inconsistent.  Deal with it.  :-)
+
+
+;;; IMPLEMENT THIS FUNCTION FOR CS 580
+
+;(defun k-fold-validation (data k num-hidden-units alpha initial-bounds max-iterations)
+;  "Given a set of data, performs k-fold validation on this data for
+;the provided value of k, by training the network on (k-1)/k of the data,
+;then testing generalization on the remaining 1/k of the data.  This is
+;done k times for different 1/k chunks (and building k different networks).
+;The average error among all tested samples is returned.  Don't print any errors,
+;and use a modulo of MAX-ITERATIONS."
+;  )
+
 
 
 ;;; here are the inputs and outputs of your three problems to test

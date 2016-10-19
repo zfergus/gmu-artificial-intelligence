@@ -1,0 +1,202 @@
+NEURAL NETWORKS
+---------------
+
+6.  Consider the following McCulloch and Pitts Neural network, where three
+neurons A, B, and C are feeding into neuron D.  The neuron outputs are
+designated with numbers inside the [brackets].  The weights of the edges
+are the labels on the edges, between the (parentheses).
+
+
+	 [A:1]--(0.5)-->[D:0]<--(-0.2)--[B:0]
+			  ^
+			  |
+			(-0.4)
+			  |
+			  |
+			[C:1]
+
+
+At the next time step, what will be the output value of neuron D?
+
+
+7.  Consider the following VERY simple perceptron, where input neurons A
+and B are feeding into output neuron C.
+
+		   [C]
+	 	  ^ ^ ^
+		 /  |  \
+	        /   |   \
+ 	      [A]  [B]	[bias: 1]
+
+The initial weights for the edges AC, BC, and biasC are 0.  We then
+present the following inputs in this order:	01, 10, 11, 10, 00, 01 (where
+the first item in an input goes to AC, and the second goes to BC).  The
+expected outputs are, correspondingly, 1, 1, 0, 1, 0, 1.  The bias unit is
+fixed to 1.
+
+Let's update this to a more modern version of the perceptron.
+Use 0.1 for 0 and 0.9 for 1, and also use sigmoid.
+
+	A. After presenting these inputs and outputs, what are the weight
+values for AC, BC, and biasC?
+
+	B.  Is it possible for the perceptron to learn this function?  Why
+or why not?
+
+
+
+8.  Consider the following fully-connected feed-forward backpropagation
+network:
+
+		[ ]		Layer O
+
+	     [ ]   [ ]		Layer H
+
+	     [ ]   [ ]		Layer I
+
+
+The matrix V is:
+
+	1	0
+	-2	-1
+
+The matrix W is:
+
+	-2	-1
+
+We present the following input to layer I:
+
+	1
+	1
+
+	a. What will be the output of Layer O?
+
+Let the expected output be 4.  Assume that alpha is 1. Perform
+backpropgation.
+
+	b. What will be the new values of matrix W?
+	c. What will be the new values of matrix V?
+
+
+
+
+DECISION TREES
+--------------
+
+9.  Consider the following table:
+
+		    ATTRIBUTES		CLASS
+		-------------------	-----
+	ITEM	NAME	AGE	SEX	HAIR
+	1	Bob	Old	M	Gray
+	2	Sue	Old	F	Gray
+	3	Sean	Med	M	Brown
+	4	Bob	Med	M	Brown
+	5	Sue	Young	M	Brown
+	6	Sean	Young	F	Gray
+	7	Bob	Med	M	Brown
+
+A. Using the DECISION-TREE-LEARNING algorithm, where CHOOSE-ATTRIBUTE is
+defined as "pick name first if available, then age if available, then
+sex", construct the resulting decision tree.  Your initial default should
+be "Gray", though it won't matter.  If you wind up with a tie when doing 
+MOST-COMMON-LABEL, use "Gray" for Sue and "Brown" for Sean.
+
+B. At the beginning of constructing the decision tree, what is the
+information value of NAME?  Of AGE?  Of SEX?   Using the more intelligent
+CHOOSE-ATTRIBUTE mechanism defined in my class notes, which attribute will
+you choose first in this case?
+
+
+
+EVOLUTIONARY COMPUTATION
+=====================
+
+(I only lightly discussed GP but these questions aren't hard)
+
+10. You have written a GP system which evolves a little program which moves
+an ant around on a grid.  The purpose of the all-caps items is explained
+in subquestion B.  Here are two GP individuals.
+
+	(if-food-ahead (prog2 move left) 
+		(prog3 left (IF-FOOD-AHEAD left (prog2 right move)) 
+		  	(prog2 left move)))
+
+	(prog3 (if-food-ahead left (PROG2 move left)) 
+	         left (prog2 move left))
+
+
+A.  Write these individuals in a GP style parse-tree format.
+
+B. I have put the crossover points in ALL CAPS.  Show the resultant 
+individuals in parse-tree format after crossing them over at the crossover 
+points. 
+
+
+11. Consider the following two GA genomes:
+
+	1 2 3 4 5 6 7 8 9
+	A B C D E F G H I
+
+Show a result from crossing them over using:
+
+A. One-point crossover
+B. Two-point crossover
+C. Any-point (uniform) crossover
+
+
+12. Describe and explain the 1/5 rule.
+
+13. In what basic way does an ES-style evolutionary loop differ from a
+GA-style evolutionary loop?
+
+14. What is the difference between fitness-proportionate and tournament
+selection?  (Yeah, I didn't discuss that much).
+
+
+EXTRA
+======================
+10. Consider the decision tree data in question 9.  Normally K-Nearest
+Neighbor uses real-valued attributes.  But these attributes are
+categorical.  How would you organize the attributes into a real-valued
+space so you could use K-Nearest Neighbor?
+
+11. Consider three points in space: A <0,0,0>, B <0, 0, 1>, and C <0,
+0.7, 0.7>.  Under what kinds of distance measures would A be closer to B
+than A is to C?  How about the other way around?
+
+12. Let's say that you have 10 data points.  Describe how you would you
+do 5-fold validation on these points with some machine learning
+algorithm.
+
+13. What are the differences between gradient descent (or ascent if you
+like) and Newton's method?  Why do these differenes matter?
+
+14. You have a representation in the form of a fixed-length vector of
+integers each ranging from 0..5.  Describe at least two approaches to
+MUTATING this vector.
+
+15. Imagine you had a representation in the form of a VARIABLE-LENGTH
+list.  How might you develop a mutation algorithm to change the length
+of the list?  How might you do a crossover algorithm which does the same
+thing?  How might you do a mutation mechanism inspired by gene
+duplication?  https://en.wikipedia.org/wiki/Gene_duplication
+
+16. How would you do tournament selection with REAL VALUED tournament
+sizes >= 1.0?
+
+17. In what ways do SIMULATED ANNEALING, HILL CLIMBING WITH RANDOM
+RESTARTS, (1+1), and (MU+LAMBDA) [for values > 1] differ in terms of
+their approach to striking a balance between exploration and
+exploitation?  What knobs does the GENETIC ALGORITHM provide in this
+regard?
+
+18. How might you change the decision-making function for k-means so
+that clusters all have roughly the same number of members?  [this is a
+tough one]
+
+19. What is the curse of dimensionality?  What is an inverse function?
+
+20. Come up with another way of doing crossover in genetic programming.
+And another way of doing mutation.
+
