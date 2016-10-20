@@ -120,8 +120,9 @@ corners of a three-dimensional hypercube (you'll see).
 I have built in a bias in my conversion function so you can forget about
 that issue.
 
-For the NAND and XOR problems, you have to get the code working.  This usually requires
-several runs before it will converge to a perfect solution.
+For the NAND and XOR problems, you have to get the code working.
+This usually requires several runs before it will converge to a perfect
+solution.
 
 Once you have gotten NAND and XOR working, try running the other problems and
 seeing how they generalize.
@@ -1664,7 +1665,7 @@ and use a modulo of MAX-ITERATIONS."
 
 ;;; you'll need to run this a couple of times before it globally converges.
 ;;; When it *doesn't* converge what is usually happening?
-(net-build (convert-data *nand*) 3 1.0 5 20000 1000 t)
+(print (net-build (convert-data *nand*) 3 1.0 5 20000 1000 t))
 ;; -> Average Error: 3.6271826e-11
 ;;    Worst Error: 7.4651396e-11
 ;;    (((0.32335806 -4.3368006 1.9956297)
@@ -1673,7 +1674,7 @@ and use a modulo of MAX-ITERATIONS."
 ;;     ((3.6067996 -5.67546 5.4706874)))
 
 
-(net-build (convert-data *xor*) 3 1.0 5 20000 1000 t)
+(print (net-build (convert-data *xor*) 3 1.0 5 20000 1000 t))
 ;; -> Average Error: 2.7846725e-11
 ;;    Worst Error: 5.255174e-11
 ;;    (((5.176077 -6.6833043 10.048226)
@@ -1686,40 +1687,40 @@ and use a modulo of MAX-ITERATIONS."
 ;; stuck in a local optimum.
 
 ;; how well does this converge on average?  Can you modify it to do better?
-(net-build (convert-data *voting-records*) 10 1.0 2 5000 250 t)
+(print (net-build (convert-data *voting-records*) 10 1.0 2 5000 250 t))
 
 ;; On average this converages to a average error of 4e-4.
 ;; The following modification does a better job, avg error = 2e-5
-(net-build (convert-data *voting-records*) 16 1.0 5 20000 250 t)
+(print (net-build (convert-data *voting-records*) 16 1.0 5 20000 250 t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; NOTE: See the paper for further analysis of the following generalizations.
 
 ;;; How well does this generalize usually?
 ;;; Can you modify it to typically generalize better?
-(simple-generalization *voting-records* 10 1.0 2 5000) ;; pick appropriate values
+(print (simple-generalization *voting-records* 10 1.0 2 5000)) ;; pick appropriate values
 
 ;;; The average error for the testing set is ~0.02
 ;;; The following does better with an average error of ~0.01
-(simple-generalization *voting-records* 16 1.0 5 5000)
+(print (simple-generalization *voting-records* 16 1.0 5 5000))
 
 
 ;;; How well does this generalize usually?
 ;;; Can you modify it to typically generalize better?
-(simple-generalization *mpg* 10 1.0 2 5000) ;; pick appropriate values
+(print (simple-generalization *mpg* 10 1.0 2 5000)) ;; pick appropriate values
 
 ;;; The average error for the testing set is ~0.002
 ;;; The following does better with an average error of ~0.002
-(simple-generalization *mpg* 5 1.0 5 5000)
+(print (simple-generalization *mpg* 5 1.0 5 5000))
 
 
 ;;; How well does this generalize usually?
 ;;; Can you modify it to typically generalize better?
-(simple-generalization *wine* 10 1.0 5 5000)  ;; pick appropriate values
+(print (simple-generalization *wine* 10 1.0 5 5000))  ;; pick appropriate values
 
 ;;; The average error for the testing set is ~0.02
 ;;; The following does better with an average error of ~0.01
-(simple-generalization *wine* 10 1.0 0.5 5000)
+(print (simple-generalization *wine* 10 1.0 0.5 5000))
 
 ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
