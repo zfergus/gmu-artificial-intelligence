@@ -333,7 +333,7 @@ pretty efficient.  Returns the shuffled version of the list."
 
 (defun sigmoid (u)
   "Sigmoid function applied to the number u (Asumme beta = 1)."
-  (/ 1 (+ 1 (exp (- u))))) ; 1/(1+e^(-u))
+      (/ 1.0 (+ 1.0 (exp (- u))))) ; 1/(1+e^(-u))
 
 ;; output and correct-output are both column-vectors
 
@@ -513,9 +513,10 @@ of the data, then tests generalization on the second half, returning
 the average error among the samples in the second half.  Don't print any errors,
 and use a modulo of MAX-ITERATIONS."
   ; Build the neural network, V and W matrices
-  (let* ((data-first-half (convert-data (butlast data
-      (ceiling (/ (length data) 2)))))
-    (data-second-half (convert-data (last data (floor (/ (length data) 2)))))
+  (let* ((converted-data (shuffle (convert-data (scale-data data))))
+    (data-first-half (butlast converted-data (ceiling (/ (length data) 2))))
+    (data-second-half (last converted-data (floor (/ (length data) 2))))
+    ; Build a neural network using the first half of the data.
     (v-w (net-build data-first-half num-hidden-units alpha initial-bounds
       max-iterations max-iterations nil)))
     ; Return the average of all the errors of the second half of the data.
@@ -1664,21 +1665,62 @@ and use a modulo of MAX-ITERATIONS."
 ;;; you'll need to run this a couple of times before it globally converges.
 ;;; When it *doesn't* converge what is usually happening?
 (net-build (convert-data *nand*) 3 1.0 5 20000 1000 t)
+;; -> Average Error: 3.6271826e-11
+;;    Worst Error: 7.4651396e-11
+;;    (((0.32335806 -4.3368006 1.9956297)
+;;      (3.1346853 -3.0426702 4.0744524)
+;;      (7.0117807 -2.7446976 -1.264797))
+;;     ((3.6067996 -5.67546 5.4706874)))
+
 
 (net-build (convert-data *xor*) 3 1.0 5 20000 1000 t)
+;; -> Average Error: 2.7846725e-11
+;;    Worst Error: 5.255174e-11
+;;    (((5.176077 -6.6833043 10.048226)
+;;      (-2.3944068 6.9220805 -2.3169632)
+;;      (-2.0136313 3.4954612 9.514289))
+;;     ((-5.4100933 -5.0166416 7.960069)))
 
+
+;; Answer: When this does not converge it is because the optimization gets
+;; stuck in a local optimum.
 
 ;; how well does this converge on average?  Can you modify it to do better?
 (net-build (convert-data *voting-records*) 10 1.0 2 5000 250 t)
 
+;; On average this converages to a average error of 4e-4.
+;; The following modification does a better job, avg error = 2e-5
+(net-build (convert-data *voting-records*) 16 1.0 5 20000 250 t)
 
-;;; how well does this generalize usually?  Can you modify it to typically generalize better?
-(simple-generalization *voting-records* ...)  ;; pick appropriate values
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; NOTE: See the paper for further analysis of the following generalizations.
 
-;;; how well does this generalize usually?  Can you modify it to typically generalize better?
-(simple-generalization *mpg* ...) ;; pick appropriate values
+;;; How well does this generalize usually?
+;;; Can you modify it to typically generalize better?
+(simple-generalization *voting-records* 10 1.0 2 5000) ;; pick appropriate values
 
-;;; how well does this generalize usually?  Can you modify it to typically generalize better?
-(simple-generalization *wine* ...)  ;; pick appropriate values
+;;; The average error for the testing set is ~0.02
+;;; The following does better with an average error of ~0.01
+(simple-generalization *voting-records* 16 1.0 5 5000)
 
+
+;;; How well does this generalize usually?
+;;; Can you modify it to typically generalize better?
+(simple-generalization *mpg* 10 1.0 2 5000) ;; pick appropriate values
+
+;;; The average error for the testing set is ~0.002
+;;; The following does better with an average error of ~0.002
+(simple-generalization *mpg* 5 1.0 5 5000)
+
+
+;;; How well does this generalize usually?
+;;; Can you modify it to typically generalize better?
+(simple-generalization *wine* 10 1.0 5 5000)  ;; pick appropriate values
+
+;;; The average error for the testing set is ~0.02
+;;; The following does better with an average error of ~0.01
+(simple-generalization *wine* 10 1.0 0.5 5000)
+
+;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 |#
