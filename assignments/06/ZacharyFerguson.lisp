@@ -60,9 +60,6 @@ separate PDF report, mail that too.
 |#
 
 
-
-
-
 ;;; Some utility Functions and Macros that you might find to be useful (hint)
 
 (defmacro while (test &rest body)
@@ -171,22 +168,25 @@ POP-SIZE, using various functions"
   ;;(SETUP)                     called at the beginning of evolution, to set up
   ;;                            global variables as necessary
   ;;(CREATOR)                   creates a random individual
-  ;;(SELECTOR num pop fitneses) given a population and a list of corresponding fitnesses,
-  ;;                            selects and returns NUM individuals as a list.
-  ;;                            An individual may appear more than once in the list.
-  ;;(MODIFIER ind1 ind2)        modifies individuals ind1 and ind2 by crossing them
-  ;;                            over and mutating them.  Returns the two children
-  ;;                            as a list: (child1 child2).  Nondestructive to
-  ;;                            ind1 and ind2.
-  ;;(PRINTER pop fitnesses)     prints the best individual in the population, plus
-  ;;                            its fitness, and any other interesting statistics
-  ;;                            you think interesting for that generation.
-  ;;(EVALUATOR individual)      evaluates an individual, and returns its fitness.
+  ;;(SELECTOR num pop fitneses) given a population and a list of corresponding
+  ;;                            fitnesses, selects and returns NUM individuals
+  ;;                            as a list. An individual may appear more than
+  ;;                            once in the list.
+  ;;(MODIFIER ind1 ind2)        modifies individuals ind1 and ind2 by crossing
+  ;;                            them over and mutating them. Returns the two
+  ;;                            children as a list: (child1 child2).
+  ;;                            Nondestructive to ind1 and ind2.
+  ;;(PRINTER pop fitnesses)     prints the best individual in the population,
+  ;;                            plus its fitness, and any other interesting
+  ;;                            statistics you think interesting for that
+  ;;                            generation.
+  ;;(EVALUATOR individual)      evaluates an individual, and returns its
+  ;;                            fitness.
   ;;Pop will be guaranteed to be a multiple of 2 in size.
   ;;
   ;; HIGHER FITNESSES ARE BETTER
 
-  ;; your function should call PRINTER each generation, and also print out or the
+  ;; your function should call PRINTER each generation, and also print out the
   ;; best individual discovered over the whole run at the end, plus its fitness
   ;; and any other statistics you think might be nifty.
 
@@ -194,8 +194,12 @@ POP-SIZE, using various functions"
   ;;; the following functions (among others)
   ;;;
   ;;; FUNCALL FORMAT MAPCAR LAMBDA APPLY
-
-)
+  (funcall setup)
+  (let ((pop (generate-list pop-size creator t)))
+    (dotimes (i generations)
+      (let* ((fitneses (mapcar #'(lambda (individual)
+                                  (funcall evaluator individual)) pop))
+        (fittest))))))
 
 
 
@@ -265,8 +269,6 @@ UNIFORM random numbers in the range appropriate to the given problem"
 *crossover-probability* is the probability that any given allele will crossover.
 The individuals are guaranteed to be the same length.  Returns NIL."
 
-  ;;; IMPLEMENT ME
-  ;;;
   ;;; For crossover: use uniform crossover (Algorithm 25) in
   ;;;                Essentials of Metaheuristics
   ;;; HINTS:
@@ -280,24 +282,20 @@ The individuals are guaranteed to be the same length.  Returns NIL."
   "Performs gaussian convolution mutation on the individual, modifying it in place.
  Returns NIL."
 
-  ;;; IMPLEMENT ME
-  ;;;
   ;;; For mutation, see gaussian convolution (Algorithm 11) in
   ;;;                Essentials of Metaheuristics
   ;;; Keep in mind the legal minimum and maximum values for numbers.
   ;;; HINTS:
   ;;; Maybe a function or three in the utility functions above might be handy
   ;;; See also SETF
-  (dotimes (i (length ind) nil)
-    (if (random? :prob *mutation-probability*)
-      (while ()))))
-
-
-
-
-
-
-
+  (dotimes (i (length ind) nil) ; For each gene in the individual
+    (if (random? :prob *mutation-probability*) ; If mutate gene i
+      (let ((new-gene (+ (elt ind i) (gaussian-random 0.0 *mutation-varience*))))
+        ; Generate new gene values until one falls with in range.
+        (while (or (< new-gene *float-min*) (> new-gene *float-max*))
+          (setf new-gene (+ (elt ind i) (gaussian-random 0.0 *mutation-varience*))))
+        ; Update the ith gene in the individual
+        (setf (elt ind i) new-gene)))))
 
 
 (defun float-vector-modifier (ind1 ind2)
@@ -315,7 +313,10 @@ given allele in a child will mutate.  Mutation does gaussian convolution on the 
   ;;; HINTS:
   ;;; For copying lists:  See the Lisp Cheat Sheet
   ;;;                (http://cs.gmu.edu/~sean/lisp/LispCheatSheet.txt)
-  )
+  (let ((children (list (copy-list ind1) (copy-list ind2))))
+    (apply #'uniform-crossover children) ; Cross-over the copied parents
+    (mapcar #'gaussian-convolution children) ; Mutate the children
+    children)) ; Return the children as a list
 
 
 ;; you probably don't need to implement anything here
@@ -324,7 +325,7 @@ given allele in a child will mutate.  Mutation does gaussian convolution on the 
 (ahem) various global variables which define the problem being evaluated
 and the floating-point ranges involved, etc.  I dunno."
   )
-[@
+;[@
 
 
 
@@ -392,6 +393,6 @@ and the floating-point ranges involved, etc.  I dunno."
 	:creator #'float-vector-creator
 	:selector #'tournament-selector
 	:modifier #'float-vector-modifier
-        :evaluator #'sum-f
+  :evaluator #'sum-f
 	:printer #'simple-printer)
 |#
