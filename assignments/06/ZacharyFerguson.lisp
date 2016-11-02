@@ -126,8 +126,8 @@ given mean and variance (using the Box-Muller-Marsaglia method)"
   (let ((best (random-index fitnesses))) ; Initialize best to a random index
     (dotimes (i (- *tournament-size* 1) (elt population best))
       (let ((next (random-index fitnesses))) ; Get random index of sample
-        (if (> (elt fitnesses next) (elt fitness best) ; if Next better
-          (setf best next))))))); Best <- Next
+        (if (> (elt fitnesses next) (elt fitnesses best)) ; if Next better
+          (setf best next)))))); Best <- Next
 
 
 
@@ -168,7 +168,7 @@ POP-SIZE, using various functions"
   ;;(SETUP)                     called at the beginning of evolution, to set up
   ;;                            global variables as necessary
   ;;(CREATOR)                   creates a random individual
-  ;;(SELECTOR num pop fitneses) given a population and a list of corresponding
+  ;;(SELECTOR num pop fitnesses) given a population and a list of corresponding
   ;;                            fitnesses, selects and returns NUM individuals
   ;;                            as a list. An individual may appear more than
   ;;                            once in the list.
@@ -194,17 +194,17 @@ POP-SIZE, using various functions"
   ;;; the following functions (among others)
   ;;;
   ;;; FUNCALL FORMAT MAPCAR LAMBDA APPLY
-  (funcall setup)
-  (let ((pop (generate-list pop-size creator t)))
-    (dotimes (i generations)
-      (let* ((fitneses (mapcar #'(lambda (individual)
-                                  (funcall evaluator individual)) pop))
-        (fittest))))))
-
-
-
-
-
+  (funcall setup) ; Call the setup function
+  (let ((pop (generate-list pop-size creator t))) ; Create the initial pop.
+    (dotimes (i generations) ; For n generations
+      (let* ((fitnesses (mapcar #'(lambda (individual)
+          (funcall evaluator individual)) pop))) ; Map from pop to fitnesses
+        (funcall printer pop fitnesses) ; Print the current generation
+        (let ((next-gen nil)) ; Create a new generation
+          (dotimes (j (/ pop-size 2)) ; Pair up parents
+            (setf next-gen (append next-gen (apply modifier ; Create two new children
+              (funcall selector 2 pop fitnesses))))) ; Select two fit individuals
+          (setf pop next-gen)))))) ; Set population to the new generation
 
 
 
@@ -274,7 +274,7 @@ The individuals are guaranteed to be the same length.  Returns NIL."
   ;;; HINTS:
   ;;; DOTIMES, ELT, and ROTATEF
   (dotimes (i (length ind1) nil)
-    (if (random? :prob *crossover-probability*)
+    (if (random? *crossover-probability*)
       (rotatef (elt ind1 i) (elt ind2 i)))))
 
 
@@ -289,11 +289,11 @@ The individuals are guaranteed to be the same length.  Returns NIL."
   ;;; Maybe a function or three in the utility functions above might be handy
   ;;; See also SETF
   (dotimes (i (length ind) nil) ; For each gene in the individual
-    (if (random? :prob *mutation-probability*) ; If mutate gene i
-      (let ((new-gene (+ (elt ind i) (gaussian-random 0.0 *mutation-varience*))))
+    (if (random? *mutation-probability*) ; If mutate gene i
+      (let ((new-gene (+ (elt ind i) (gaussian-random 0.0 *mutation-variance*))))
         ; Generate new gene values until one falls with in range.
         (while (or (< new-gene *float-min*) (> new-gene *float-max*))
-          (setf new-gene (+ (elt ind i) (gaussian-random 0.0 *mutation-varience*))))
+          (setf new-gene (+ (elt ind i) (gaussian-random 0.0 *mutation-variance*))))
         ; Update the ith gene in the individual
         (setf (elt ind i) new-gene)))))
 
@@ -379,7 +379,7 @@ and the floating-point ranges involved, etc.  I dunno."
 (defun schwefel-f (ind)
   "Performs the Schwefel objective function.  Assumes that ind is a list of floats"
   (- (reduce #'+ (mapcar (lambda (x) (* (- x) (sin (sqrt (abs x)))))
-			 (mapcar (lambda (x) (* x 100) ind))))))
+			 (mapcar (lambda (x) (* x 100)) ind)))))
 
 
 
@@ -396,3 +396,10 @@ and the floating-point ranges involved, etc.  I dunno."
   :evaluator #'sum-f
 	:printer #'simple-printer)
 |#
+
+;;; Results
+; Best Individual of Generation...
+; Fitness: 102.13245
+; Individual:(5.1091156 5.1094213 5.0949063 5.1055074 5.1177473 5.109817 5.111027
+;             5.1055226 5.0985565 5.1169515 5.1165757 5.1181273 5.1093388 5.10713
+;             5.112763 5.1080003 5.1184735 5.093994 5.1037664 5.0656943)
