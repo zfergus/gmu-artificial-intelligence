@@ -87,9 +87,9 @@ new slot is created).  EQUALP is the default test used for duplicates."
   (let (bag)
     (while (< (length bag) num)
       (let ((candidate (funcall function)))
-	(unless (and no-duplicates
-		     (member candidate bag :test #'equalp))
-	  (push candidate bag))))
+  (unless (and no-duplicates
+         (member candidate bag :test #'equalp))
+    (push candidate bag))))
     bag))
 
 ;; hope this works right
@@ -98,19 +98,10 @@ new slot is created).  EQUALP is the default test used for duplicates."
 given mean and variance (using the Box-Muller-Marsaglia method)"
   (let (x y (w 0))
     (while (not (and (< 0 w) (< w 1)))
-	   (setf x (- (random 2.0) 1.0))
-	   (setf y (- (random 2.0) 1.0))
-	   (setf w (+ (* x x) (* y y))))
+     (setf x (- (random 2.0) 1.0))
+     (setf y (- (random 2.0) 1.0))
+     (setf w (+ (* x x) (* y y))))
     (+ mean (* x (sqrt variance) (sqrt (* -2 (/ (log w) w)))))))
-
-
-(defun random-index (list)
-  "Returns a random index in the given list."
-  (random (length list)))
-
-(defun random-elt (list)
-  "Returns a random element in the given list."
-  (elt list (random-index list)))
 
 
 ;;;;;; TOP-LEVEL EVOLUTIONARY COMPUTATION FUNCTIONS
@@ -123,12 +114,12 @@ given mean and variance (using the Box-Muller-Marsaglia method)"
 (defun tournament-select-one (population fitnesses)
   "Does one tournament selection and returns the selected individual."
   ;;; See Algorithm 32 of Essentials of Metaheuristics
-  (let ((best (random-index fitnesses))) ; Initialize best to a random index
-    (dotimes (i (- *tournament-size* 1) (elt population best))
-      (let ((next (random-index fitnesses))) ; Get random index of sample
-        (if (> (elt fitnesses next) (elt fitnesses best)) ; if Next better
-          (setf best next)))))); Best <- Next
-
+  (elt population (elt ; Return highest fitness individual
+    ; Sort a list of random indecies in fitnesses
+    (sort (generate-list *tournament-size*
+        #'(lambda () (random (length fitnesses))))
+      ; Get the index of the fittest individual
+      #'(lambda (i j) (> (elt fitnesses i) (elt fitnesses j)))) 0)))
 
 
 (defun tournament-selector (num population fitnesses)
@@ -147,18 +138,18 @@ given mean and variance (using the Box-Muller-Marsaglia method)"
 prints that fitness and individual in a pleasing manner."
   (let (best-ind best-fit)
     (mapcar #'(lambda (ind fit)
-		(when (or (not best-ind)
-			  (< best-fit fit))
-		  (setq best-ind ind)
-		  (setq best-fit fit))) pop fitnesses)
+    (when (or (not best-ind)
+        (< best-fit fit))
+      (setq best-ind ind)
+      (setq best-fit fit))) pop fitnesses)
     (format t "~%Best Individual of Generation...~%Fitness: ~a~%Individual:~a~%"
-	    best-fit best-ind)
+      best-fit best-ind)
     fitnesses))
 
 
 
 (defun evolve (generations pop-size
-	       &key setup creator selector modifier evaluator printer)
+         &key setup creator selector modifier evaluator printer)
   "Evolves for some number of GENERATIONS, creating a population of size
 POP-SIZE, using various functions"
 
@@ -273,7 +264,7 @@ The individuals are guaranteed to be the same length.  Returns NIL."
   ;;;                Essentials of Metaheuristics
   ;;; HINTS:
   ;;; DOTIMES, ELT, and ROTATEF
-  (dotimes (i (length ind1) nil)
+  (dotimes (i (min (length ind1) (length ind2)) nil)
     (if (random? *crossover-probability*)
       (rotatef (elt ind1 i) (elt ind2 i)))))
 
@@ -366,20 +357,21 @@ and the floating-point ranges involved, etc.  I dunno."
 (defun rosenbrock-f (ind)
   "Performs the Rosenbrock objective function.  Assumes that ind is a list of floats"
   (- (reduce #'+ (mapcar (lambda (x x1)
-			   (+ (* (- 1 x) (- 1 x))
-			      (* 100 (- x1 (* x x)) (- x1 (* x x)))))
-			 ind (rest ind)))))
+        ; (1-x)**2 + 100 * (x1 - x**2)**2
+        (+ (* (- 1 x) (- 1 x))
+            (* 100 (- x1 (* x x)) (- x1 (* x x)))))
+       ind (rest ind)))))
 
 (defun rastrigin-f (ind)
   "Performs the Rastrigin objective function.  Assumes that ind is a list of floats"
   (- (+ (* 10 (length ind))
-	(reduce #'+ (mapcar (lambda (x) (- (* x x) (* 10 (cos (* 2 pi x)))))
-			    ind)))))
+  (reduce #'+ (mapcar (lambda (x) (- (* x x) (* 10 (cos (* 2 pi x)))))
+          ind)))))
 
 (defun schwefel-f (ind)
   "Performs the Schwefel objective function.  Assumes that ind is a list of floats"
   (- (reduce #'+ (mapcar (lambda (x) (* (- x) (sin (sqrt (abs x)))))
-			 (mapcar (lambda (x) (* x 100)) ind)))))
+       (mapcar (lambda (x) (* x 100)) ind)))))
 
 
 
@@ -389,12 +381,12 @@ and the floating-point ranges involved, etc.  I dunno."
 
 #|
 (evolve 50 1000
- 	:setup #'float-vector-sum-setup
-	:creator #'float-vector-creator
-	:selector #'tournament-selector
-	:modifier #'float-vector-modifier
+  :setup #'float-vector-sum-setup
+  :creator #'float-vector-creator
+  :selector #'tournament-selector
+  :modifier #'float-vector-modifier
   :evaluator #'sum-f
-	:printer #'simple-printer)
+  :printer #'simple-printer)
 |#
 
 ;;; Results
@@ -403,3 +395,58 @@ and the floating-point ranges involved, etc.  I dunno."
 ; Individual:(5.1091156 5.1094213 5.0949063 5.1055074 5.1177473 5.109817 5.111027
 ;             5.1055226 5.0985565 5.1169515 5.1165757 5.1181273 5.1093388 5.10713
 ;             5.112763 5.1080003 5.1184735 5.093994 5.1037664 5.0656943)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; The following converges to individuals with genes > 5.
+
+#|
+(evolve 50 1000
+  :setup #'float-vector-sum-setup
+  :creator #'float-vector-creator
+  :selector #'tournament-selector
+  :modifier #'float-vector-modifier
+  :evaluator #'step-f
+  :printer #'simple-printer)
+|#
+
+;;; Results
+; Best Individual of Generation...
+; Fitness: 218
+; Individual:(5.1180067 5.066333 4.1752305 5.0845027 4.025402 5.081081 5.1020937
+;             5.1188984 5.0452952 5.0155277 5.1027217 5.0260115 5.0900407
+;             5.027154 5.0309134 5.0491047 5.111242 5.092253 5.029934 5.019791)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; The following minimizes the sum of the squared values.
+;;; The gene values converge to 0.
+
+#|
+(evolve 50 1000
+  :setup #'float-vector-sum-setup
+  :creator #'float-vector-creator
+  :selector #'tournament-selector
+  :modifier #'float-vector-modifier
+  :evaluator #'sphere-f
+  :printer #'simple-printer)
+|#
+
+; Best Individual of Generation...
+; Fitness: -0.0056634336
+; Individual:(-0.0074968413 -0.004433047 0.022472257 -0.0044431463 0.04387998
+;             0.023790058 -0.0016307216 -0.0064120255 0.027510725 -0.0030036885
+;             -0.012258083 -0.011953682 -0.008142242 -0.013576329 -0.012332678
+;             0.0042012483 -0.016095182 0.014820685 0.014096186 -0.019257754)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; The following minimizes the sum of the squared values.
+;;; The gene values converge to 0.
+
+; #|
+(evolve 50 1000
+  :setup #'float-vector-sum-setup
+  :creator #'float-vector-creator
+  :selector #'tournament-selector
+  :modifier #'float-vector-modifier
+  :evaluator #'rosenbrock-f
+  :printer #'simple-printer)
+  ; |#
