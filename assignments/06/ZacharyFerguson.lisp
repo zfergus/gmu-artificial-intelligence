@@ -186,17 +186,16 @@ POP-SIZE, using various functions"
   ;;;
   ;;; FUNCALL FORMAT MAPCAR LAMBDA APPLY
   (funcall setup) ; Call the setup function
-  (let ((pop (generate-list pop-size creator t))) ; Create the initial pop.
-    (dotimes (i generations) ; For n generations
-      (let* ((fitnesses (mapcar #'(lambda (individual)
-          (funcall evaluator individual)) pop))) ; Map from pop to fitnesses
+  (let ((pop (generate-list pop-size creator))) ; Create the initial pop.
+    (dotimes (i generations pop) ; For n generations
+      (let ((fitnesses (mapcar #'(lambda (individual)
+          (funcall evaluator individual)) pop)))
         (funcall printer pop fitnesses) ; Print the current generation
-        (let ((next-gen nil)) ; Create a new generation
-          (dotimes (j (/ pop-size 2)) ; Pair up parents
-            (setf next-gen (append next-gen (apply modifier ; Create two new children
-              (funcall selector 2 pop fitnesses))))) ; Select two fit individuals
-          (setf pop next-gen)))))) ; Set population to the new generation
-
+        (setf pop (apply #'append ; Set the pop to a new generation
+          (generate-list (/ pop-size 2) #'(lambda ()
+            ; Generate a new population by crossing over individuals
+            (apply modifier
+              (funcall selector 2 pop fitnesses))))))))))
 
 
 
@@ -290,10 +289,11 @@ The individuals are guaranteed to be the same length.  Returns NIL."
 
 
 (defun float-vector-modifier (ind1 ind2)
-  "Copies and modifies ind1 and ind2 by crossing them over with a uniform crossover,
-then mutates the children.  *crossover-probability* is the probability that any
-given allele will crossover.  *mutation-probability* is the probability that any
-given allele in a child will mutate.  Mutation does gaussian convolution on the allele."
+  "Copies and modifies ind1 and ind2 by crossing them over with a uniform
+crossover, then mutates the children. *crossover-probability* is the
+probability that any given allele will crossover.  *mutation-probability* is
+the probability that any given allele in a child will mutate.  Mutation does
+gaussian convolution on the allele."
 
   ;;; IMPLEMENT ME
   ;;; It's pretty straightforward.
@@ -316,7 +316,6 @@ given allele in a child will mutate.  Mutation does gaussian convolution on the 
 (ahem) various global variables which define the problem being evaluated
 and the floating-point ranges involved, etc.  I dunno."
   )
-;[@
 
 
 
@@ -374,19 +373,44 @@ and the floating-point ranges involved, etc.  I dunno."
        (mapcar (lambda (x) (* x 100)) ind)))))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Test evaluation functions
+(defun average (lis)
+  "Computes the average over a list of numbers.  Returns 0 if the list length is 0."
+  (if (= (length lis) 0)
+    0
+    (/ (reduce #'+ lis) (length lis))))
 
 
+(defun avg-best-fitness (num-trials generations pop-size
+         &key setup creator selector modifier evaluator printer)
+  "Computes the average of the best fitnesses for num-trials."
+  (average (generate-list num-trials #'(lambda ()
+    (first (sort (mapcar evaluator (evolve generations pop-size
+      :setup setup
+      :creator creator
+      :selector selector
+      :modifier modifier
+      :evaluator evaluator
+      :printer printer)) #'>))))))
+
+(defparameter *number-of-trials* 1 ; Change this to 1 to get default results
+  "Number of trials to run for testing.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; The following are several test case used to test the above functons.
 ;;; an example way to fire up the GA.  If you've got it tuned right, it should quickly
 ;;; find individuals which are all very close to +5.12
 
 #|
-(evolve 50 1000
-  :setup #'float-vector-sum-setup
-  :creator #'float-vector-creator
-  :selector #'tournament-selector
-  :modifier #'float-vector-modifier
-  :evaluator #'sum-f
-  :printer #'simple-printer)
+(format t "~%Average best fitness for 50 trials: ~a~%"
+  (avg-best-fitness *number-of-trials* 1000 50
+    :setup #'float-vector-sum-setup
+    :creator #'float-vector-creator
+    :selector #'tournament-selector
+    :modifier #'float-vector-modifier
+    :evaluator #'sum-f
+    :printer #'simple-printer))
 |#
 
 ;;; Results
@@ -400,13 +424,14 @@ and the floating-point ranges involved, etc.  I dunno."
 ;;; The following converges to individuals with genes > 5.
 
 #|
-(evolve 50 1000
-  :setup #'float-vector-sum-setup
-  :creator #'float-vector-creator
-  :selector #'tournament-selector
-  :modifier #'float-vector-modifier
-  :evaluator #'step-f
-  :printer #'simple-printer)
+(format t "~%Average best fitness for 50 trials: ~f~%"
+  (avg-best-fitness *number-of-trials* 1000 50
+    :setup #'float-vector-sum-setup
+    :creator #'float-vector-creator
+    :selector #'tournament-selector
+    :modifier #'float-vector-modifier
+    :evaluator #'step-f ; f(x) = floor(x)
+    :printer #'simple-printer))
 |#
 
 ;;; Results
@@ -421,15 +446,18 @@ and the floating-point ranges involved, etc.  I dunno."
 ;;; The gene values converge to 0.
 
 #|
-(evolve 50 1000
-  :setup #'float-vector-sum-setup
-  :creator #'float-vector-creator
-  :selector #'tournament-selector
-  :modifier #'float-vector-modifier
-  :evaluator #'sphere-f
-  :printer #'simple-printer)
+(format t "~%Average best fitness for 50 trials: ~f~%"
+  (avg-best-fitness *number-of-trials* 1000 50
+    :setup #'(lambda ()
+      (setf *tournament-size* 14))
+    :creator #'float-vector-creator
+    :selector #'tournament-selector
+    :modifier #'float-vector-modifier
+    :evaluator #'sphere-f
+    :printer #'simple-printer))
 |#
 
+;;; Results
 ; Best Individual of Generation...
 ; Fitness: -0.0056634336
 ; Individual:(-0.0074968413 -0.004433047 0.022472257 -0.0044431463 0.04387998
@@ -438,15 +466,126 @@ and the floating-point ranges involved, etc.  I dunno."
 ;             0.0042012483 -0.016095182 0.014820685 0.014096186 -0.019257754)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; The following minimizes the sum of the squared values.
-;;; The gene values converge to 0.
+;;; The gene values should all converge to 1.
 
-; #|
-(evolve 50 1000
-  :setup #'float-vector-sum-setup
-  :creator #'float-vector-creator
-  :selector #'tournament-selector
-  :modifier #'float-vector-modifier
-  :evaluator #'rosenbrock-f
-  :printer #'simple-printer)
-  ; |#
+#|
+(format t "~%Average best fitness for 50 trials: ~f~%"
+  (avg-best-fitness *number-of-trials* 1000 50
+    :setup #'(lambda ()
+      (setf *tournament-size* 14)
+      (setf *crossover-probability* 0.01)
+      (setf *mutation-probability* 0.01)
+      (setf *mutation-variance* 0.01))
+    :creator #'float-vector-creator
+    :selector #'tournament-selector
+    :modifier #'float-vector-modifier
+    :evaluator #'rosenbrock-f
+    :printer #'simple-printer))
+|#
+
+;;; Results
+; Best Individual of Generation...
+; Fitness: -15.988052
+; Individual:(0.81734437 0.66739005 0.45090497 0.19887169 0.033109196
+;             0.0136255175 -0.0026979893 0.0099992305 7.3359604e-4 0.0075760875
+;             0.0026294664 0.024225838 0.020321865 0.002469265 0.0043759774
+;             0.02122669 0.018006817 0.0015915819 0.015672602 0.0022177175)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+#|
+(format t "~%Average best fitness for 50 trials: ~f~%"
+  (avg-best-fitness *number-of-trials* 1000 50
+    :setup #'float-vector-sum-setup
+    :creator #'float-vector-creator
+    :selector #'tournament-selector
+    :modifier #'float-vector-modifier
+    :evaluator #'rastrigin-f
+    :printer #'simple-printer))
+|#
+
+;;; Results
+; Best Individual of Generation...
+; Fitness: -0.4650607946025218d0
+; Individual:(-0.009429347 -0.006413374 0.022219859 0.0048547797 0.014526263
+;            0.007250933 -0.006687667 0.0041171685 -0.012395553 -0.008388802
+;            6.117821e-4 -0.010391197 -0.0021239072 -0.008927017 -0.01838119
+;            0.021270677 -0.0061068535 -0.0021966845 0.009331189 -0.0061398335)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+#|
+(format t "~%Average best fitness for 50 trials: ~f~%"
+  (avg-best-fitness *number-of-trials* 1000 50
+    :setup #'float-vector-sum-setup
+    :creator #'float-vector-creator
+    :selector #'tournament-selector
+    :modifier #'float-vector-modifier
+    :evaluator #'schwefel-f
+    :printer #'simple-printer))
+|#
+
+;;; Results
+; Best Individual of Generation...
+; Fitness: 8255.884
+; Individual:(4.1916695 4.191471 4.206466 4.1881437 -3.0363421 4.2178636 4.212388
+;            4.237754 4.208902 4.2316628 4.213921 4.226744 4.200037 4.233181
+;            4.2241774 4.201371 4.2014604 4.197831 4.2071953 4.223152)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; REPORT
+;; See the pdf for a full report of the results.
+; Design and Implementation:
+;
+;   Implementing the functions for this assignment was a simple conversion from
+; the algorithms provided in the lecture. Utilizing the provided helper
+; functions, I was able to simplify the implementation in many cases. The only
+; function pseudo-code not provided was the evolve function. This function,
+; however, is a straight forward loop creating new generations each iteration.
+;   First, I setup any parameters necessary for the problem, then I create the
+; first generation with the given creator function. I then loop generation
+; times, crossing-over and mutating a selected subset of the previous
+; generation, repeating the above process with the new generation. Depending on
+; the population size and number of generations the problem can take a
+; significant time to solve.
+;   Overall the implementation of the functions was straight forward and easy
+; to implement in a C-like manor. Some thought was required when implementing
+; in a more standard LISP style, but not more than any previous assignment.
+;
+; Reflection:
+;
+;   This assignment helped to cement the ideas behind genetic algorithms and
+; there usefulness. The provided evaluation functions were helpful when testing
+; and exemplified the ability of genetic algorithms. The only step of testing
+; that was troublesome was devising good parameters for the functions. The
+; values decided on were devise through a process of trial and error.
+;
+; Analyzing the Results:
+;
+;   Using the provided evaluation functions, I was able to test my
+; implementation. This testing involved varying the parameters of the functions
+; in the form of the tournament size, mutation rate, crossover rate, and
+; mutation variance. The population size is held constant at 50 individuals.
+; The size of the floating point vector is 20, and the number of generations is
+; 1000.
+; For the first test function, sum, the fitness is exactly equal to the sum of
+; the genes of the individual. All parameters were left at their default
+; values. The average best fitness of 50 trials was equal to 102.2. With a max
+; fitness of 5.12 * 20 = 102.4, the percent error of the results is 0.2%. This
+; is well within reason.
+; For the next test, step, the fitness is equal to the sum of the floor of each
+; gene plus six times the length of the vector. Therefore the max fitness
+; achievable is 20 * 5 + 20 * 6 = 220. As above the default parameters were
+; used and the resulting average best fitness was 217.86. The percent error of
+; these results is 0.97% well within reason.
+; The sphere test function minimizes the squared sum of the vectors values.
+; Therefore vectors closer to zero have a better fitness. In experimentation,
+; using a tournament size of 14 resulted in an average best fitness of
+; -0.000315. For this test fitnesses range from -524.288 to 0.0, so the
+; resulting value is well within expectation.
+; For the Rosenbrock testing function the expected value is a vector of all
+; ones. This implies that the best fitness is 0.0. From experimentation with a
+; tournament-size of 14, crossover probability of 0.01, mutation probability of
+; 0.01, and mutation variance of 0.01, an average best fitnesses of -28.98 was
+; achieved.
