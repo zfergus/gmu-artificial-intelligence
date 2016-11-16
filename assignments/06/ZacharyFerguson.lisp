@@ -195,7 +195,10 @@ POP-SIZE, using various functions"
           (dotimes (j (/ pop-size 2)) ; Pair up parents
             (setf next-gen (append next-gen (apply modifier ; Create two new children
               (funcall selector 2 pop fitnesses))))) ; Select two fit individuals
-          (setf pop next-gen)))))) ; Set population to the new generation
+          (setf pop next-gen)))) ; Set population to the new generation
+    ; Print the best individual at the end
+    (funcall printer pop (mapcar #'(lambda (individual)
+        (funcall evaluator individual)) pop))))
 
 
 
@@ -236,7 +239,7 @@ UNIFORM random numbers in the range appropriate to the given problem"
   ;;; HINT: Maybe a function I provided in the utilities might
   ;;; be handy here
   (generate-list *float-vector-length* #'(lambda ()
-    (+ (random (+ (abs *float-min*) (abs *float-max*))) *float-min*))))
+    (+ (random (- *float-max* *float-max*)) *float-min*))))
 
 
 
