@@ -64,7 +64,7 @@ either *player-1* or to *player-2* and indicates if *player-1* or *player-2*
 should be considered 'max' (the other player is then considered to be 'min')"
   ;; If the state is terminal or we have reached max depth
   (if (or (funcall terminal state) (> current-depth max-depth))
-    (funcall evaluate state) ;; return the evaluated value of S
+    (funcall evaluate state max-player) ;; return the evaluated value of S
   ;; Otherwise,
     (dolist (child (funcall expand state) ;; Possible next moves
       (if (equalp max-player (state-turn state)) alpha beta))
@@ -82,19 +82,33 @@ should be considered 'max' (the other player is then considered to be 'min')"
           (if (equalp max-player (state-turn state)) beta alpha))))))
 
 
+(definline sum-player-owned-pits (state player)
+  " Sums all the player owned pit including the moncala. "
+  (let ((start-index (left-pit player)))
+    (reduce #'+ ;; Sum the number of seeds in the player's pits
+      (subseq (state-board state) start-index (+ start-index *num-pits* 1)))))
+
+
+(definline map-range-to-range (x in-min in-max out-min out-max)
+  "Map from one range to another range.
+Implementation based on arduino map function:
+https://www.arduino.cc/en/Reference/Map"
+  (+ out-min (/ (* (- x in-min) (- out-max out-min)) (- in-max in-min))))
+
+
+(defparameter num-stones (* 2 *num-pits* *initial-stones-per-pit*)
+  "Total number of stones on the board.")
+
+
 (defun evaluate (state max-player)
   "Evaluates the game situation for MAX-PLAYER. Returns the value of STATE for
 MAX-PLAYER (who is either *player-1* or *player-2*).  This should be a value
 ranging from *min-wins* to *max-wins*."
-  ;; TODO: Write this function properly.
-  (let ((player-1-score (score state *player-1*))
-        (player-2-score (score state *player-2*))
-        (player-1-wins (if (equalp max-player *player-1*)
-          *max-wins* *min-wins*))
-        (player-2-wins (if (equalp max-player *player-2*)
-          *max-wins* *min-wins*)))
-    (if (= player-1-score player-2-score) 0
-      (if (> player-1-score player-2-score) player-1-wins player-2-wins))))
+  ;; Heuristic found here: http://blog.hackerrank.com/mancala/
+  ;; Map from [-48, 48] to [min-wins, max-wins]
+  (map-range-to-range (- (sum-player-owned-pits state max-player)
+     (sum-player-owned-pits state (other-player max-player)))
+     (- num-stones) num-stones *min-wins* *max-wins*))
 
 
 (defun computer-make-move (state max-depth)
@@ -104,7 +118,19 @@ alpha-beta function to search for the quality of a state, computer-make-move
 should print out the state (using PRINT, not PRINT-STATE) that is being
 searched. Only search up to max-depth.  The computer should assume that he is
 the player who's turn it is right now in STATE"
-  )
+  ;; Initialize the best move to make
+  (let ((best nil)
+        (best-score *min-wins*))
+    ;; Examine all the possible states from the current state
+    (dolist (child (moves state) best)
+      ;; Call alpha-beta min-max search on the child to get the score.
+      (let ((score (alpha-beta (print child) 0 max-depth (state-turn state)
+                      #'moves #'game-overp #'evaluate *min-wins* *max-wins*)))
+        ;; Save only the best score and state found
+        (if (> score best-score) (progn
+          (setf best child)
+          (setf best-score score)))))))
+
 
 ;; Go back to the standard :cl-user namespace
 (in-package :cl-user)
