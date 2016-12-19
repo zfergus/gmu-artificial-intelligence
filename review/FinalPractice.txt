@@ -1,0 +1,431 @@
+Imagine the following directed acyclic graph (DAG), with the edges
+weighted as shown.  A is the starting state in your graph.  Assume that an
+edge which goes downward is directed downward.
+
+                        A
+                       / \
+                     (3) (1)
+                     /     \
+                    B       C
+                   / \     / \
+                 (2) (3) (4) (6)
+                 /     \ /     \
+                D       E       |
+               / \     / \      |
+             (3) (3) (2) (1)   /
+             /     \  \   /   /
+            F       \__GOAL__/
+
+
+1. Which path to the GOAL has the best cost?  
+
+2. Assume that children are put into the queue in such a way that left
+siblings are chosen before right siblings.  Show the order of traversal
+until a goal is found with:
+
+        Breadth-First Search
+        Depth-First Search
+        Iterated Deepening Search
+        Uniform-Cost (Dijkstra's Algorithm) Search
+               (h(s) == 0 for all s)
+
+3. Assume that you have the following h (heuristic) 
+   values for your nodes in the tree above:
+
+        node:           A       B       C       D       E       F       GOAL
+        h(node):        2       2       7       3       2       5       0
+
+        A. Remember that f(node) = g(node) + h(node).  Is the h an
+           admissable heuristic?  If not, what you could you change to make it
+           admissable?
+
+        B. Is this heuristic monotonic?
+
+        C. Assume it's monotonic.  Show the order of traversal while 
+           applying the A* algorithm until a goal is found, using this h.
+           Did you find the goal following optimum path?  Why or why not?
+
+4. What are the advantages of DFS over BFS?  BFS over DFS?  Why would you
+want to use Iterated Deepening?
+
+5. Provide an admissable heuristic for solving the Rubik's Cube.  It doesn't
+have to be good, just admissable.  No, I won't accept h(s) = 0 
+
+
+
+Imagine the following adversary search tree:
+
+        MAX                      A
+                              /     \ 
+        MIN                  B       C
+                          /   \     /   \
+        MAX              D     E   F     -1
+                        / \   /\   /\   
+        MIN            -1 .2 .3 -1 0 G
+                                    / \
+        MAX                        1   1
+
+6. What value will this min-max tree return?  That is, what will A be
+equal to?
+
+7. Assume that you traverse the tree left-to-right depth-first.  Are
+there any places where Alpha-Beta pruning will negate the need to evaluate
+a node?  What happens if you traverse the tree right-to-left?
+
+-------------------------------------------------------------------------------
+
+Some Probabilistic Reasoning questions, drawn from Russell and Norvig.  
+These vary from the easy to the insanely hard.
+
+10.  [13.8 green book, 13.15 blue book] After your yearly checkup, the 
+doctor has bad news and good news.  The bad news is that you tested 
+positive for a serious disease and that the test is 99% accurate (i.e., 
+he probability of testing positive when you do have the disease is 0.99, 
+as is the probability of testing negative when you don't have the 
+disease).  The good news is that this is a rare disease, striking only 1 
+in 10,000 people of your age.  Why is it good news that the disease is 
+rare?  What are the chances that you actually have the disease?
+
+
+
+
+11. [13.9 green book, 13.16 blue book] It is often quite useful to 
+consider the effect of some specific propositions in the context of some 
+general background evidence that remains fixed, rather than in the 
+complete absence of information.  The following questions ask you to 
+prove more general versions of the product rule and Bayes' rule, with 
+respect to some background evidence e:
+
+a. Prove the conditionalized version of the general product rule: P(X, Y 
+| e...) = P(X | Y, e...) P(Y | e...)
+
+b. Prove the conditionalized version of Bayes' rule P(Y | X, e...) = P(X 
+| y, e...) P(Y | e...) / P(X | e...)
+
+
+
+
+12.  [13.10 green book, 13.17 blue book] Show that the statement of 
+conditional independence: P(X, Y | Z) = P(X | Z) P(Y | Z) is equivalent 
+to each of the statements: P(X | Y, Z) = P(X | Z) and P(Y |X, Z) = P(Y | 
+Z)
+
+
+
+
+13. [13.15 in green book, 13.21 in blue book] (Adapted from Pearl 
+1988).)  Suppose you are a witness to a nighttime hit-and-run accident 
+involving a taxi in Athens.  All taxis in Athens are blue or green.  You 
+swear, under oath, that the taxi was blue.  Extensive testing shows 
+that, under dim lighting conditions, discrimination between blue and 
+green is 75% reliable.
+
+a. Is it possible to calculate the most likely color for the taxi?  
+(Hint: distinguish carefully between the proposition that the taxi *is* 
+blue, and the proposition that the taxi *appears* blue).
+
+b. What if you know that 9 out of 10 Athenian taxis are green?
+
+
+
+
+14.  [14.8 in green book, 14.1 in blue book] Consider the following 
+Bayes network for car diagnosis:
+
+Battery -+-> Radio
+         |
+         +-> Ignition -+-> Starts ---> Moves
+                       |
+               Gas ----+
+
+a. Extend the network with the Boolean variables IcyWeather and 
+StarterMotor
+
+b. Give reasonable conditional probability tables for all the nodes.  
+[Also after you've built a table, try computing P(Moves | battery = 
+true, gas = false), etc.]
+
+c. How many independent (that is, separate) values are contained in the 
+joint probability distribution for all eight Boolean nodes, assuming 
+that no conditional independence relations are known to hold among them?
+
+d. How many independent probability values do your network tables 
+contain?
+
+e. Not discussed in class, so you can ignore this: [The conditional 
+distribution for Starts could be described as a noisy-AND distribution.  
+Define this family in general and relate it to the noisy-OR 
+distribution.]
+
+
+
+
+15. [14.7a in green book, 14.15a in blue book] Consider the following 
+Bayes network for car diagnosis:
+
+Burglary (B) ---+-> Alarm (A) -+-> JohnCalls (J)
+                |              |
+Earthquake (E) -+              +-> MaryCalls (M)
+
+P(B) = { b: 0.001, ~b: 0.999 } 
+P(E) = { e: 0.002, ~e: 0.998 } 
+P(A | B, E) = { a|b,e: 0.97, ~a|b,e: 0.03,
+                a|b,~e: 0.94, ~a|b,~e: 0.06,
+                a|~b,e: 0.29, ~a|~b,e: 0.71,
+                a|~b,~e: 0.001, ~a|~b,~e: 0.999 } 
+P(J|A) = { j|a: 0.9, ~j|a: 0.1,
+           j|~a: 0.05, ~j|~a: 0.95 }
+P(M|A) = { m|a: 0.7, ~m|a: 0.3,
+           m|~a: 0.01, ~m|~a: 0.99 }
+
+a. Solve the query P(B | j=true, m=true)
+
+
+
+
+[We didn't cover this question in the class, but you might try it]]
+
+18. [14.9a, b, and c in the green book, 14.17a, b, and c in the blue 
+book] Consider the problem of generating a random sample from a 
+specified distribution on a single variable.  Assume you have a random 
+number generator that returns a random number uniformly distributed 
+between 0 and 1.
+
+a. Let X be a discrete variable of values 1 ... k with P(X) = {p_1, ..., 
+p_k}.  The CUMULATIVE DISTRIBUTION of X, CDF(X), is defined as {cdf_1, 
+..., cdf_k} where cdf_j = p_1 + ... + p_j.  Explain how to calculate the 
+cumulative distribution in O(k) time, and how to generate a single 
+random number under P(X) when all you have available is CDF(X).  
+Furthermore, explain how to generate this number in less than O(k) time.
+
+b. Now suppose we want to generate N samples of X, where N >> k.  
+Explain how to do this with an expected run time per sample that is 
+*constant* (i.e, independent of k).
+
+c. Now consider a continuous-valued variable with a parameterized 
+distribution (such as a Gaussian).  How can samples be generated from 
+such a distribution?
+
+-------------------------------------------------------------------------------
+
+19.  Imagine that you were modeling the graph in question 14 using a 
+Naive Bayes approach rather than a Bayes Network.  What would the 
+"Network" look like then?  Provide the equation for computing 
+P(Moves | Gas, Starts, Ignition, Radio, Battery, IcyWeather, StarterMotor).
+
+20. [From Russell and Norvig] How many solutions are there for the 
+three-color Australia map-coloring problem?  How many if four colors 
+were allowed?  Two colors?
+
+21.  [From Russell and Norvig] Give precise formulations for each of the 
+following as constraint satisfaction problems:
+
+a. Rectilinear floor-planning: find non-overlapping places in a large 
+rectangle for a number of smaller rectangles.
+
+b. Class scheduling: There is a fixed number of professors and 
+classrooms, a list of classes to be offered, and a list of possible time 
+slots for classes.  Each professor has a set of classes that he or she 
+can teach.
+
+c. Hamiltonian tour: given a network of cities connected by roads, 
+choose an order to visit all cities in a country without repeating any.
+
+22.  The zebra problem is as follows.  There are five houses in a row, 
+each of a different color, with inhabitants of different nationalities, 
+different pets, different preferred beverages, and different cigarette 
+preferences.  [it's an old problem]
+
+There are five houses.
+The Englishman lives in the red house.
+The Spaniard owns the dog.
+Coffee is drunk in the green house.
+The Ukrainian drinks tea.
+The green house is immediately to the right of the ivory house.
+	[to *your* right]
+The Old Gold smoker owns snails.
+Kools are smoked in the yellow house.
+Milk is drunk in the middle house.
+The Norwegian lives in the first house.
+The man who smokes Chesterfields lives in the house next to the man 
+	with the fox.
+Kools are smoked in a house next to the house where the horse is kept.
+The Lucky Strike smoker drinks orange juice.
+The Japanese smokes Parliaments.
+The Norwegian lives next to the blue house.
+Water is drunk in one house.
+One house has a zebra.
+
+a. How would you formulate this problem as a constraint satisfaction 
+problem?  What are the variables values, and specific constraints?
+
+b. Can you solve the following queries: in which house is the water 
+drunk?  Which house has the zebra?
+
+
+23.  Like any other sparse reduction of a full joint distribution, the Naive 
+Bayes model can be described as a Bayes Net.  Let's say that you have 
+the following Naive Bayes model:
+
+	Whether or not mail is [S]pam
+	Whether or not mail was sent from [N]igeria
+	Whether or not mail used [Y]ahoo! Mail
+	Whether or not mail used [H]TML
+	Whether or not mail had a [F]orged sender
+
+You're interested in the query P(S | N,Y,H,F) of course.
+
+a. Naive Bayes doesn't have the joint P(S,N,Y,H,F) laying around, but 
+rather assumes various smaller distributions from which it computes the 
+joint.  What are those distributions?
+
+b. Draw those distributions as a graph structure like in A Bayes Net.
+
+c. What is the equation which combines those distributions to form the 
+joint?
+
+d. What conditional independence assumptions are made?  Can you derive 
+the equation starting with P(S,N,Y,H,F), in the same way that we derived 
+the Bayes Net example, using those conditional independence assumptions?
+
+e. Are there any hidden variables?
+
+-------------------------------------------------------------------------------
+
+Consider the following propositional theory:
+
+        (A)     ^
+        (~A v B) ^
+        (~B v ~C v E) ^
+        (~A v ~B v C)
+
+1. Is this theory in a normal form?  If so, which one?
+
+2. Use resolution to prove:  C
+
+3. Convert this theory into one with horn clauses, where the last in each
+clause becomes the head (consequent) of the horn clause.
+
+4. Use backward chaining and modus ponens to prove: E
+
+Consider the following predicate theory:
+
+        red(block17)
+        goofy(block41)
+        smart(block17)
+        FORALL X, EXISTS Y: red(Y) ^ goofy(X) -> wacky(X)
+        FORALL X: goofy(X) -> red(X)
+        FORALL X: red(X), smart(X) -> happy(X).
+
+5. Convert this into a KB we can use to do queries on.
+
+6. Given the converted KB.  Use backward chaining and unification to
+determine for which W that happy(W) is true.
+
+
+
+8.   The Haskell language often comes with an elegant example of Quicksort:
+
+qsort []  = []
+qsort (x:xs) = qsort elts_lt_x ++ [x] ++ qsort elts_greq_x
+            where
+                       elts_lt_x = [y | y <- xs, y < x] 
+                       elts_greq_x = [y | y <- xs, y >= x]
+
+That is: quicksort on the empty list is the empty list. quicksort on a list 
+takes the first item (x) as a pivot, and the rest of the list (xs). Break xs 
+into two sublists, the first containing all elements but x that are >= x, 
+and the second containing all elements < x. Quicksort the two sublists. 
+Then concatenate the first quicksorted list, followed by the list containing 
+x, followed by the second quicksorted list.
+
+Write the same thing in Lisp. Elegantly. Extra unicorns and smiley-faces
+if you can get it as close-looking to the Haskell version as possible. No,
+you’re not allowed to use (sort ...	) :-)
+
+
+
+
+11. Consider the following semantic network (I am too lazy to draw it, I'll
+just give the relational statements and you can draw the graph):
+
+	flies(bird,yes)
+	has(bird,feathers)
+	ISA(tweety,canary)
+	ISA(canary,bird)
+	ISA(opus,penguin)
+	ISA(penguin,bird)
+	flies(penguin,no)
+	ISA(roderunner,bird)
+	flies(roderunner,no)
+	biggerThan(roderunner,canary)
+	biggerThan(penguin,roderunner)
+
+    	Also the following features are true:
+	    biggerThan is transitive.
+			(it is the "transitive closure over itself")
+	    ISA operates as we have discussed in class.
+			(It's also transitive, remember!)
+	    For any Y, flies(Y,X) can have only *one* X.
+
+11a. Can opus fly?  Why or why not?
+
+11b. If you asked:  biggerThan(X,Y), what answers would you get back for X
+and Y?
+
+11c. If you asked: biggerThan(X,Y) and flies(X,Z) and flies(Y,Z), what
+answers would you get back for X, Y, and Z?
+
+-------------------------------------------------------------------------------
+
+1. MAGIC SQUARES have been around since early China.  Look up the 
+definition (Wikipedia is helpful) and describe the formulation of a
+magic square as a constraint satisfaction problem.  Describe the
+variables, values, domains, and constraints.
+
+2. Can a crossword puzzle be described as a SAT problem?  Why or why 
+not?
+
+3. [For CS 580]  Consider the AUSTRALIA MAP 3-COLORING example.  There are seven 
+states/territories of interest: Western Australia (WA), Northern
+Territory (NT), South Australia (SA), Queensland (Q), New South Wales
+(NSW), Victoria (V), and Tasmania (T).  Your job is to color the
+state/sterritories with RED, BLUE, or GREEN such that no two bordering
+states/territories have the same color.
+
+WA borders NT and SA.  NT also borders Q and SA.  SA also borders Q and NSW and 
+V.  Q also borders NSW.  NSW also borders V.  T doesn't border anything.
+
+Let's say that WA has been bound to Red, and Q has been bound to Green.  
+Apply the AC-3 algorithm to reduce the domains of the remaining
+states/territories.
+
+-------------------------------------------------------------------------------
+
+20.  Like any other sparse reduction of a full joint distribution, the Naive 
+Bayes model can be described as a Bayes Net.  Let's say that you have 
+the following Naive Bayes model:
+
+	Whether or not mail is [S]pam
+	Whether or not mail was sent from [N]igeria
+	Whether or not mail used [Y]ahoo! Mail
+	Whether or not mail used [H]TML
+	Whether or not mail had a [F]orged sender
+
+You're interested in the query P(S | N,Y,H,F) of course.
+
+a. Naive Bayes doesn't have the joint P(S,N,Y,H,F) laying around, but 
+rather assumes various smaller distributions from which it computes the 
+joint.  What are those distributions?
+
+b. Draw those distributions as a graph structure like in a Bayes Net.
+
+c. What is the equation which combines those distributions to form the 
+joint?
+
+d. What conditional independence assumptions are made?  Can you derive 
+the equation starting with P(S,N,Y,H,F), in the same way that we derived 
+the Bayes Net example, using those conditional independence assumptions?
+
+e. Are there any hidden variables?
+
