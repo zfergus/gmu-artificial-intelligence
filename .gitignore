@@ -2,3 +2,7 @@
 *.FASL
 *.fasl
 *.lisp-temp
+
+# Sean Luke Lecture Material
+lectures/
+review/
